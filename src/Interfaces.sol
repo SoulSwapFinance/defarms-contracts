@@ -23,22 +23,10 @@ interface IERC20 {
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
 
 interface IERC20Metadata is IERC20 {
-    /**
-     * @dev Returns the name of the token.
-     */
     function name() external view returns (string memory);
-
-    /**
-     * @dev Returns the symbol of the token.
-     */
     function symbol() external view returns (string memory);
-
-    /**
-     * @dev Returns the decimals places of the token.
-     */
     function decimals() external view returns (uint8);
 }
-
 
 interface ISoulSwapFactory {
     event PairCreated(address indexed token0, address indexed token1, address pair, uint);
@@ -75,6 +63,7 @@ interface IManifestation {
 
 interface IManifester {
     function soulDAO() external returns (address);
+    function usdcAddress() external returns (address);
     function wnativeAddress() external returns (address);
     function nativeSymbol() external returns (string memory);
     function getNativePrice() external view returns (int);

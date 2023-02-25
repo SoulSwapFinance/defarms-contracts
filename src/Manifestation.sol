@@ -156,7 +156,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: setup state.
         isSetup = true;
-            
     }
 
     // updates: rewards, so that they are accounted for.

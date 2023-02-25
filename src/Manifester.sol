@@ -21,11 +21,11 @@ contract Manifester is IManifester {
 
     string public override nativeSymbol;
     address public override wnativeAddress;
+    address public override usdcAddress;
 
     uint public bloodSacrifice;
     bool public isPaused;
 
-    // todo: create: Manifestations struct //
     struct Manifestations {
         address mAddress;
         address rewardAddress;
@@ -66,18 +66,21 @@ contract Manifester is IManifester {
     }
 
     constructor(
-        address _wnativeAddress, 
+        address _factoryAddress,
+        address _usdcAddress,
+        address _wnativeAddress,
         address _nativeOracle, 
         uint _oracleDecimals,
         string memory _nativeSymbol
     ) {
-        SoulSwapFactory = ISoulSwapFactory(0x1120e150dA9def6Fe930f4fEDeD18ef57c0CA7eF);
+        SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
         bloodSacrifice = toWei(1);
-        nativeSymbol = _nativeSymbol; // 'FTM';
-        wnativeAddress = _wnativeAddress; // = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
+        nativeSymbol = _nativeSymbol;           // 'FTM';
+        usdcAddress = _usdcAddress;             // = 0x04068DA6C83AFCFA0e13ba15A6696662335D5B75;
+        wnativeAddress = _wnativeAddress;       // = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
         soulDAO = msg.sender;
-        nativeOracle = IOracle(_nativeOracle); // = IOracle(0xf4766552D15AE4d256Ad41B6cf2933482B0680dc);
-        oracleDecimals = _oracleDecimals; // nativeOracle.decimals();
+        nativeOracle = IOracle(_nativeOracle);  // = IOracle(0xf4766552D15AE4d256Ad41B6cf2933482B0680dc);
+        oracleDecimals = _oracleDecimals;       // nativeOracle.decimals();
     }
 
     function createManifestation(
@@ -175,39 +178,34 @@ contract Manifester is IManifester {
         );
     }
 
-    // function launchManifestation(
-    //     uint id,
-    //     uint duraDays,
-    //     uint dailyReward,
-    //     uint feeDays
-    // ) public {
-    //     // uint rewards = getTotalRewards(duraDays, dailyReward);
-    //     // uint sacrifice = getSacrifice(fromWei(rewards));
-    //     // uint total = rewards + sacrifice;
-    //     address mAddress = manifestations[id];
-    //     (address depositAddress, address rewardAddress) = getTokens(id);
+    function launchManifestation(
+        uint id,
+        uint duraDays,
+        uint dailyReward,
+        uint feeDays
+    ) public {
+        address daoAddress = daos[id];
+        require(msg.sender == daoAddress, 'only the DAO may launch');
 
-    //     // require(getManifestation[depositAddress][id] != address(0), 'manifestation invalid');
+        uint reward = getTotalRewards(duraDays, dailyReward);
+        uint sacrifice = getSacrifice(fromWei(reward));
+        uint total = reward + sacrifice;
 
-    //     // creates: new manifestation based off of the inputs, then stores as an array.
-    //     Manifestation(mAddress).manifest(rewardAddress, depositAddress, msg.sender, address(this));
+        address rewardAddress = rewards[id];
+        address mAddress = manifestations[id];
 
-    //     address daoAddress = getDAO[depositAddress][id];
-    //     require(msg.sender == daoAddress, 'only the DAO may launch');
-
-    //     // sets: the rewards data for the newly-created manifestation.
-    //     Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
+        // sets: the rewards data for the newly-created manifestation.
+        Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
     
-    //     // checks: the creator has a sufficient balance to cover both rewards + sacrifice. // todo: re-enable
-    //     // require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
+        // checks: the creator has a sufficient balance to cover both rewards + sacrifice.
+        require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
 
-    //     // transfers: sacrifice directly to soulDAO.
-    //     // IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice); // todo: re-enable
+        // transfers: sacrifice directly to soulDAO.
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice);
         
-    //     // transfers: `totalRewards` to the manifestation contract.
-    //     // IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, rewards); // todo: re-enable
-
-    // }
+        // transfers: `totalRewards` to the manifestation contract.
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, reward);
+    }
 
     // creates: deposit token (as reward-native pair).
     function getTokens(uint id) public view returns (address depositAddress, address rewardAddress) {

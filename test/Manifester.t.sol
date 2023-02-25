@@ -48,8 +48,15 @@ contract ManifesterTest is Test {
     function deployContracts() public virtual {
         // deploys: Native Token
         wnativeToken = new MockToken(
-            "NativeToken",
-            "NATIVE",
+            "Wrapped Fantom",
+            "WFTM",
+            1_000_000_000
+        );
+
+        // deploys: USDC Token
+        usdcToken = new MockToken(
+            "USD Coin",
+            "USDC",
             1_000_000_000
         );
 
@@ -67,16 +74,18 @@ contract ManifesterTest is Test {
             1_000_000_000
         );
 
+        // deploys: Mock Factory
+        factory = new MockFactory();
+
         // deploys: Manifester Contract
         manifester = new Manifester(
+            address(factory),
+            address(usdcToken),
             address(wnativeToken),
             nativeOracle,
             oracleDecimals,
             wnativeToken.symbol()
         );
-
-        // deploys: Mock Factory
-        factory = new MockFactory();
 
     }
 
@@ -85,16 +94,19 @@ contract ManifesterTest is Test {
         deployContracts();
 
         manifester.createManifestation(
-        address(rewardToken),       // address rewardAddress, 
-        address(depositToken),      // address depositAddress,
-        daoAddress,                 // address daoAddress,
-        duraDays,                   // uint duraDays, 
-        feeDays,                    // uint feeDays, 
-        dailyReward                 // uint dailyReward
+            address(rewardToken),       // address rewardAddress, 
+            address(depositToken),      // address depositAddress,
+            daoAddress,                 // address daoAddress,
+            duraDays,                   // uint duraDays, 
+            feeDays,                    // uint feeDays, 
+            dailyReward                 // uint dailyReward
         );
     }
 
     /*/ CONTRACT TESTS /*/
+    // 1 // Create Manifestation
+    // 2 // Initialize Manifestation
+    // 3 // Calculate Sacrifice
 
     // tests: Manifestation Creation
     function testCreation() public virtual {
