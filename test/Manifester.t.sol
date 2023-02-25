@@ -40,7 +40,7 @@ contract ManifesterTest is Test {
     address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
     // address rewardAddress = 0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07; // SOUL
     // address depositAddress = 0xa2527Af9DABf3E3B4979d7E0493b5e2C6e63dC57; // SOUL-FTM
-    address assetAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
+    // address assetAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
     address wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
 
 
@@ -115,6 +115,23 @@ contract ManifesterTest is Test {
         );
     }
 
+    // tests: Manifestation Initialization
+    function initializeManifestation(uint id) public virtual {
+        createManifestation();
+        address daoAddress = manifester.daos(id);
+        address rewardAddress = manifester.rewards(id);
+        console.log('daoAddress: %s', daoAddress);
+        console.log('rewardAddress: %s', rewardAddress);
+        manifester.initializeManifestation(
+            0                 // uint id,
+            // rewardAddress,
+            // depositAddress
+            // _daoAddress,
+            // _mAddress
+        );
+        console.log('[SUCCESS] Manifestation Initialized');
+    }
+
     // tests: Manifestation Creation
     function testManifestation() public virtual {
         createManifestation();
@@ -139,6 +156,15 @@ contract ManifesterTest is Test {
             // _mAddress
         );
         console.log('[SUCCESS] Manifestation Initialized');
+    }
+
+    function testStartTime() public virtual {
+        createManifestation();
+        initializeManifestation(0);
+
+        Manifestation _manifestation = Manifestation(manifester.manifestations(0));
+        uint startTime = _manifestation.startTime();
+        console.log("start time: %s", startTime);
     }
 
     // tests: Manifestation Launch

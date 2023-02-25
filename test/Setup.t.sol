@@ -8,7 +8,7 @@ import { Utilities } from "./utils/Utilities.sol";
 import "src/Manifestation.sol";
 import "src/Manifester.sol";
 
-contract TestContract is Test {
+contract SetupContract is Test {
     Manifester manifester;
     Manifestation manifestation;
     Utilities internal utils;
