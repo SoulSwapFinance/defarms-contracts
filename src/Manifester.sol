@@ -12,8 +12,8 @@ contract Manifester is IManifester {
 
     address[] public manifestations;
     address[] public daos;
-    address[] public rewards;
-    address[] public deposits;
+    // address[] public rewards;
+    // address[] public deposits;
     address public override soulDAO;
 
     IOracle public nativeOracle;
@@ -83,6 +83,7 @@ contract Manifester is IManifester {
         oracleDecimals = _oracleDecimals;       // nativeOracle.decimals();
     }
 
+    // creates: Manifestation
     function createManifestation(
         address rewardAddress, 
         address depositAddress,
@@ -92,22 +93,9 @@ contract Manifester is IManifester {
         uint dailyReward
         // address daoAddress
     ) external whileActive returns (address manifestation, uint id) {
-        // address depositAddress = SoulSwapFactory.getPair(wnativeAddress, rewardAddress);
-        // ensures: reward token has 18 decimals, which is needed for reward calculations.
-        // require(ERC20(rewardAddress).decimals() == 18, 'reward token must be 18 decimals'); // todo: ensure safe
-
-        // [if] pair does not exist
-        // if (depositAddress == address(0)) {
-        //     // [then] creates: pair and stores as depositAddress.
-        //     createDepositToken(rewardAddress);
-        //     depositAddress = SoulSwapFactory.getPair(wnativeAddress, rewardAddress);
-        // }
-
-        // creates: variables for usage.
+    
+        // creates: id reference.
         id = manifestations.length;
-        // uint rewards = getTotalRewards(duraDays, dailyReward);
-        // uint sacrifice = getSacrifice(fromWei(rewards));
-        // uint total = rewards + sacrifice;
 
         // ensures: depositAddress is never 0x.
         require(depositAddress != address(0), 'depositAddress must be SoulSwap LP');
@@ -127,12 +115,6 @@ contract Manifester is IManifester {
 
         // stores the dao to the daos[] array
         daos.push(msg.sender);
-        
-        // stores the rewards to the daos[] array
-        rewards.push(rewardAddress);
-
-        // stores the deposits to the daos[] array
-        deposits.push(depositAddress);
 
         // increments: the total number of manifestations
         totalManifestations++;
@@ -153,18 +135,16 @@ contract Manifester is IManifester {
         emit SummonedManifestation(id, depositAddress, rewardAddress, daoAddress, manifestation);
     }
 
-    // initializes manifestation
-    function initializeManifestation(
-        uint id
-        // address _rewardAddress,
-        // address _depositAddress
-    ) external {
-    
-        // gets: associated variables from id.
+    // initializes: manifestation
+    function initializeManifestation(uint id) external {
+        // gets: stored manifestation info by id.
+        Manifestations storage manifestation = mInfo[id];
+
+        // gets: associated variables by id.
         address mAddress = manifestations[id];
         address daoAddress = daos[id];
-        address rewardAddress = rewards[id];
-        address depositAddress = deposits[id];
+        address rewardAddress = manifestation.rewardAddress;
+        address depositAddress = manifestation.depositAddress;
 
         // requires: sender is the DAO
         require(msg.sender == daoAddress, "only the DAO may initialize");
@@ -178,20 +158,22 @@ contract Manifester is IManifester {
         );
     }
 
+    // launches: Manifestation.
     function launchManifestation(
         uint id,
         uint duraDays,
         uint dailyReward,
         uint feeDays
     ) public {
-        address daoAddress = daos[id];
-        require(msg.sender == daoAddress, 'only the DAO may launch');
+        // gets: stored manifestation info by id.
+        Manifestations storage manifestation = mInfo[id];
+        require(msg.sender == manifestation.daoAddress, 'only the DAO may launch');
 
         uint reward = getTotalRewards(duraDays, dailyReward);
         uint sacrifice = getSacrifice(fromWei(reward));
         uint total = reward + sacrifice;
 
-        address rewardAddress = rewards[id];
+        address rewardAddress = manifestation.rewardAddress;
         address mAddress = manifestations[id];
 
         // sets: the rewards data for the newly-created manifestation.
@@ -213,11 +195,6 @@ contract Manifester is IManifester {
         depositAddress = Manifestation(mAddress).depositAddress();
         rewardAddress = Manifestation(mAddress).rewardAddress();
     }
-
-    // creates: deposit token (as reward-native pair).
-    // function createDepositToken(address rewardAddress) public {
-    //     SoulSwapFactory.createPair(wnativeAddress, rewardAddress);
-    // }
 
     //////////////////////////////
         /*/ VIEW FUNCTIONS /*/
@@ -258,25 +235,27 @@ contract Manifester is IManifester {
         uint endTime,
         uint dailyReward, 
         uint feeDays) {
+        // gets: stored manifestation info by id.
         mAddress = address(manifestations[id]);
-        daoAddress = address(daos[id]);
-        Manifestation manifestation = Manifestation(mAddress);
+        Manifestation m = Manifestation(mAddress);
 
-        name = manifestation.name();
-        symbol = manifestation.symbol();
+        daoAddress = m.DAO();
 
-        logoURI = manifestation.logoURI();
+        name = m.name();
+        symbol = m.symbol();
 
-        rewardAddress = manifestation.rewardAddress();
-        depositAddress = manifestation.depositAddress();
+        logoURI = m.logoURI();
+
+        rewardAddress = m.rewardAddress();
+        depositAddress = m.depositAddress();
     
-        rewardPerSecond = manifestation.rewardPerSecond();
+        rewardPerSecond = m.rewardPerSecond();
         rewardRemaining = ERC20(rewardAddress).balanceOf(mAddress);
 
-        startTime = manifestation.startTime();
-        endTime = manifestation.endTime();
-        dailyReward = manifestation.dailyReward();
-        feeDays = manifestation.feeDays();
+        startTime = m.startTime();
+        endTime = m.endTime();
+        dailyReward = m.dailyReward();
+        feeDays = m.feeDays();
     }
 
     // returns: user info for a given id.

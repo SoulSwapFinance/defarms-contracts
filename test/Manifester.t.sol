@@ -121,7 +121,7 @@ contract ManifesterTest is Test {
     // 4 // Stable Pair
     // 5 // Calculate Sacrifice
 
-    // tests: Manifestation Creation
+    // [1]: Manifestation Creation
     function test_1_Creation() public virtual {
         createManifestation();
         address mAddress = manifester.manifestations(0);
@@ -132,7 +132,7 @@ contract ManifesterTest is Test {
         console.log("[+] mAddress: %s", mAddress);
     }
 
-    // tests: Manifestation Initialization
+    // [2]: Manifestation Initialization
     function test_2_Initialization() public virtual {
         uint id = 0;
         createManifestation();
@@ -165,6 +165,8 @@ contract ManifesterTest is Test {
         // verifies: daoAddress
         assertEq(_daoAddress, daoAddress, "ok");
         console.log("[+] daoAddress: %s", daoAddress);
+        // console.log("[+] thisAddress: %s", address(this));
+        // console.log("[+] myAddress: %s", msg.sender);
 
         // verifies: duraDays
         assertEq(_duraDays, duraDays, "ok");
@@ -180,6 +182,7 @@ contract ManifesterTest is Test {
 
     }
 
+    // [3] test: Native Pair
     function test_3_NativePair() public {
         deployContracts();
         bool isNative = true;
@@ -196,6 +199,7 @@ contract ManifesterTest is Test {
         console.log("[+] nativePair: %s", address(nativePair));
     }
 
+    // [4] test: Stable Pair
     function test_4_StablePair() public {
         deployContracts();
         bool isNative = false;
