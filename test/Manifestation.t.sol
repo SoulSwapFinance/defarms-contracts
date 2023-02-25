@@ -118,6 +118,34 @@ contract ManifestationTest is Test {
         );
         console.log("[SUCCESS] Manifestation Created");
     }
+    
+
+    // tests: Manifestation Initialization
+    function initializeManifestation(uint id) public virtual {
+        createManifestation();
+        address daoAddress = manifester.daos(id);
+        address rewardAddress = manifester.rewards(id);
+        console.log('daoAddress: %s', daoAddress);
+        console.log('rewardAddress: %s', rewardAddress);
+        manifester.initializeManifestation(
+            0                 // uint id,
+            // rewardAddress,
+            // depositAddress
+            // _daoAddress,
+            // _mAddress
+        );
+        console.log('[SUCCESS] Manifestation Initialized');
+    }
+
+    // tests: StartTime
+    function testStartTime() public virtual {
+        createManifestation();
+        initializeManifestation(0);
+
+        Manifestation _manifestation = Manifestation(manifester.manifestations(0));
+        uint startTime = _manifestation.startTime();
+        console.log("start time: %s", startTime);
+    }
 
     function testBar() public {
         assertEq(uint256(1), uint256(1), "ok");

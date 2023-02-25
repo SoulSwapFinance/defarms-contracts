@@ -143,29 +143,9 @@ contract ManifesterTest is Test {
 
     // tests: Manifestation Initialization
     function testInitialization() public virtual {
-        createManifestation();
-        address daoAddress = manifester.daos(0);
-        address rewardAddress = manifester.rewards(0);
-        console.log('daoAddress: %s', daoAddress);
-        console.log('rewardAddress: %s', rewardAddress);
-        manifester.initializeManifestation(
-            0                 // uint id,
-            // rewardAddress,
-            // depositAddress
-            // _daoAddress,
-            // _mAddress
-        );
-        console.log('[SUCCESS] Manifestation Initialized');
-    }
-
-    function testStartTime() public virtual {
-        createManifestation();
         initializeManifestation(0);
-
-        Manifestation _manifestation = Manifestation(manifester.manifestations(0));
-        uint startTime = _manifestation.startTime();
-        console.log("start time: %s", startTime);
     }
+
 
     // tests: Manifestation Launch
     // function testLaunch() public {
