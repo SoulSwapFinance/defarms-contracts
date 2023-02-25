@@ -1,102 +1,67 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import { console } from "forge-std/console.sol";
-import { stdStorage, StdStorage, Test } from "forge-std/Test.sol";
-import { Utilities } from "./utils/Utilities.sol";
+import "./setup/c.t.sol";
 
-import "src/Manifestation.sol";
-import "src/Manifester.sol";
-import "src/mocks/MockToken.sol";
-import "src/mocks/MockPair.sol";
-import "src/mocks/MockFactory.sol";
-
-contract ManifesterTest is Test {
-    Manifester manifester;
-    Manifestation manifestation;
-    MockToken rewardToken;
-    MockToken wnativeToken;
-    MockToken usdcToken;
-    MockToken depositToken;
-    MockPair nativePair;
-    MockPair stablePair;
-
-    // ISoulSwapPair depositToken;
-    // address depositAddress;
-    MockFactory factory;
-    Utilities internal utils;
-
-    // constants //
-    uint public oracleDecimals = 8;
-    uint public duraDays = 90;
-    uint public feeDays = 14;
-    uint public dailyReward = 100;
-
-    // admins //
-    address payable[] internal admins;
-    address internal soulDAO; // = msg.sender;
-    address internal daoAddress = msg.sender;
-
-    // addresses //
-    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
+contract ManifesterTest is Test, c {
 
     function deployContracts() public virtual {
 
         // deploys: Mock Factory
-        factory = new MockFactory();
+        c.factory = new MockFactory();
 
         // deploys: Native Token
-        wnativeToken = new MockToken(
+        c.wnativeToken = new MockToken(
             "Wrapped Fantom",
             "WFTM",
-            1_000_000_000
+            c.initialSupply                     // totalSupply
         );
 
         // deploys: USDC Token
-        usdcToken = new MockToken(
+        c.usdcToken = new MockToken(
             "USD Coin",
             "USDC",
-            1_000_000_000
+            c.initialSupply                     // totalSupply
         );
 
         // deploys: Reward Token
-        rewardToken = new MockToken(
+        c.rewardToken = new MockToken(
             "RewardToken",
             "REWARD",
-            1_000_000_000
+            c.initialSupply                     // totalSupply
         );
 
         // deploys: Deposit Token
-        depositToken = new MockToken(
+        c.depositToken = new MockToken(
             "DepositToken",
             "DEPOSIT",
-            1_000_000_000
+            c.initialSupply                     // totalSupply
         );
 
-        nativePair = new MockPair(
-            address(factory),       // factoryAddress
-            address(rewardToken),   // token0Address
-            address(wnativeToken),  // token1Address
-            address(wnativeToken),  // wnativeAddress
-            1_000_000_000           // totalSupply
+        c.nativePair = new MockPair(
+            address(c.factory),                 // factoryAddress
+            address(c.rewardToken),             // token0Address
+            address(c.wnativeToken),            // token1Address
+            address(c.wnativeToken),            // wnativeAddress
+            c.initialSupply                     // totalSupply
         );
 
-        stablePair = new MockPair(
-            address(factory),       // factoryAddress
-            address(rewardToken),   // token0Address
-            address(usdcToken),     // token1Address
-            address(wnativeToken),  // wnativeAddress
-            1_000_000_000           // totalSupply
+        c.stablePair = new MockPair(
+            address(c.factory),                 // factoryAddress
+            address(c.rewardToken),             // token0Address
+            address(c.usdcToken),               // token1Address
+            address(c.wnativeToken),            // wnativeAddress
+            c.initialSupply                     // totalSupply
         );
 
         // deploys: Manifester Contract
-        manifester = new Manifester(
-            address(factory),
-            address(usdcToken),
-            address(wnativeToken),
-            nativeOracle,
-            oracleDecimals,
-            wnativeToken.symbol()
+        c.manifester = new Manifester(
+            address(c.factory),
+            address(c.usdcToken),
+            address(c.wnativeToken),
+            c.nativeOracle,
+            c.oracleDecimals,
+            c.wnativeToken.symbol()
         );
     }
 
@@ -104,13 +69,13 @@ contract ManifesterTest is Test {
     function createManifestation() public {
         deployContracts();
 
-        manifester.createManifestation(
-            address(rewardToken),       // address rewardAddress, 
-            address(depositToken),      // address depositAddress,
-            daoAddress,                 // address daoAddress,
-            duraDays,                   // uint duraDays, 
-            feeDays,                    // uint feeDays, 
-            dailyReward                 // uint dailyReward
+        c.manifester.createManifestation(
+            address(c.rewardToken),       // address rewardAddress, 
+            address(c.depositToken),      // address depositAddress,
+            c.daoAddress,                 // address daoAddress,
+            c.duraDays,                   // uint duraDays, 
+            c.feeDays,                    // uint feeDays, 
+            c.dailyReward                 // uint dailyReward
         );
     }
 
@@ -122,9 +87,9 @@ contract ManifesterTest is Test {
     // 5 // Calculate Sacrifice
 
     // [1]: Manifestation Creation
-    function test_1_Creation() public virtual {
+    function testCreation() public virtual {
         createManifestation();
-        address mAddress = manifester.manifestations(0);
+        address mAddress = c.manifester.manifestations(0);
         bool expected = true;
         bool actual = mAddress != address(0);
         // expect the address to not be the zero address //
@@ -133,22 +98,22 @@ contract ManifesterTest is Test {
     }
 
     // [2]: Manifestation Initialization
-    function test_2_Initialization() public virtual {
+    function testInitialization() public virtual {
         uint id = 0;
         createManifestation();
-        manifester.initializeManifestation(id);
+        c.manifester.initializeManifestation(id);
 
-        address mAddress = manifester.manifestations(id);
-        address rewardAddress = address(rewardToken);
-        address depositAddress = address(depositToken);
+        address mAddress = c.manifester.manifestations(id);
+        address rewardAddress = address(c.rewardToken);
+        address depositAddress = address(c.depositToken);
 
-        (address _mAddress, , , , , ,)         = manifester.mInfo(id);
-        (,address _rewardAddress, , , , ,)     = manifester.mInfo(id);
-        (, ,address _depositAddress, , , ,)    = manifester.mInfo(id);
-        (, , ,address _daoAddress, , ,)        = manifester.mInfo(id);
-        (, , , ,uint _duraDays, ,)             = manifester.mInfo(id);
-        (, , , , ,uint _feeDays,)              = manifester.mInfo(id);
-        (, , , , , ,uint _dailyReward)         = manifester.mInfo(id);
+        (address _mAddress, , , , , ,)         = c.manifester.mInfo(id);
+        (,address _rewardAddress, , , , ,)     = c.manifester.mInfo(id);
+        (, ,address _depositAddress, , , ,)    = c.manifester.mInfo(id);
+        (, , ,address _daoAddress, , ,)        = c.manifester.mInfo(id);
+        (, , , ,uint _duraDays, ,)             = c.manifester.mInfo(id);
+        (, , , , ,uint _feeDays,)              = c.manifester.mInfo(id);
+        (, , , , , ,uint _dailyReward)         = c.manifester.mInfo(id);
 
         // verifies: mAddress
         assertEq(_mAddress, mAddress, "ok");
@@ -163,65 +128,53 @@ contract ManifesterTest is Test {
         console.log("[+] depositAddress: %s", depositAddress);
 
         // verifies: daoAddress
-        assertEq(_daoAddress, daoAddress, "ok");
-        console.log("[+] daoAddress: %s", daoAddress);
+        assertEq(_daoAddress, c.daoAddress, "ok");
+        console.log("[+] daoAddress: %s", c.daoAddress);
         // console.log("[+] thisAddress: %s", address(this));
         // console.log("[+] myAddress: %s", msg.sender);
 
         // verifies: duraDays
-        assertEq(_duraDays, duraDays, "ok");
-        console.log("[+] duraDays: %s", duraDays);
+        assertEq(_duraDays, c.duraDays, "ok");
+        console.log("[+] duraDays: %s", c.duraDays);
 
         // verifies: feeDays
-        assertEq(_feeDays, feeDays, "ok");
-        console.log("[+] feeDays: %s", feeDays);
+        assertEq(_feeDays, c.feeDays, "ok");
+        console.log("[+] feeDays: %s", c.feeDays);
 
         // verifies: dailyReward
-        assertEq(_dailyReward, dailyReward, "ok");
-        console.log("[+] dailyReward: %s", dailyReward);
+        assertEq(_dailyReward, c.dailyReward, "ok");
+        console.log("[+] dailyReward: %s", c.dailyReward);
 
     }
 
     // [3] test: Native Pair
-    function test_3_NativePair() public {
+    function testPairs() public {
         deployContracts();
-        bool isNative = true;
-        bool _isNative = nativePair.isNative();
+        // bool isNative = true;
+        // bool _isNative = c.nativePair.isNative();
 
-        // native pair tests //
-        // console.log("Address: %s", address(nativePair));
-        // console.log("Name: %s", nativePair.name());
-        // console.log("Token0: %s", nativePair.token0());
-        // console.log("Token1: %s", nativePair.token1());
+        bool _isNative_Native = c.nativePair.isNative();
+        bool _isNative_Stable = c.stablePair.isNative();
+        
+        bool isNative_Native = true;
+        bool isNative_Stable = false;
 
-        assertEq(_isNative, isNative, "ok");
-        console.log("[+] isNative?: %s", nativePair.isNative());
-        console.log("[+] nativePair: %s", address(nativePair));
-    }
+        assertEq(_isNative_Native, isNative_Native, "ok");
+        assertEq(_isNative_Stable, isNative_Stable, "ok");
 
-    // [4] test: Stable Pair
-    function test_4_StablePair() public {
-        deployContracts();
-        bool isNative = false;
-        bool _isNative = stablePair.isNative();
+        console.log("[+] isNative(nativePair): %s", c.nativePair.isNative());
+        console.log("[+] isNative(stablePair): %s", c.stablePair.isNative());
 
-        // stable pair tests //
-        // console.log("Address: %s", address(stablePair));
-        // console.log("Name: %s", stablePair.name());
-        // console.log("Token0: %s", stablePair.token0());
-        // console.log("Token1: %s", stablePair.token1());
-
-        assertEq(_isNative, isNative, "ok");
-        console.log("[+] isNative?: %s", stablePair.isNative());
-        console.log("[+] stablePair: %s", address(stablePair));
+        console.log("[+] nativePair: %s", address(c.nativePair));
+        console.log("[+] stablePair: %s", address(c.stablePair));
     }
 
     // tests: Sacrifice Accuracy
-    function test_5_Sacrifice() public {
+    function testSacrifice() public {
         deployContracts();
         uint totalRewards = 100_000;
         uint expected = 1_000;
-        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
+        uint actual = c.manifester.getSacrifice(totalRewards) / 1E18;
         // console.log('expected: %s, actuals: %s', expected, actual);
         assertEq(actual, expected, "ok");
         console.log("[+] getSacrifice(100K): %s", actual);

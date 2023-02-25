@@ -12,8 +12,7 @@ contract Manifester is IManifester {
 
     address[] public manifestations;
     address[] public daos;
-    // address[] public rewards;
-    // address[] public deposits;
+
     address public override soulDAO;
 
     IOracle public nativeOracle;
@@ -65,6 +64,12 @@ contract Manifester is IManifester {
         _;
     }
 
+    // restricts: only existing manifestations.
+    modifier exists(uint id) {
+        require(id <= totalManifestations, 'manifestation (id) does not exist.');
+        _;
+    }
+
     constructor(
         address _factoryAddress,
         address _usdcAddress,
@@ -93,7 +98,6 @@ contract Manifester is IManifester {
         uint dailyReward
         // address daoAddress
     ) external whileActive returns (address manifestation, uint id) {
-    
         // creates: id reference.
         id = manifestations.length;
 
@@ -130,13 +134,11 @@ contract Manifester is IManifester {
             dailyReward: dailyReward
         }));
 
-        // _initializeManifestation(rewardAddress, depositAddress, daoAddress, manifestation);
-
         emit SummonedManifestation(id, depositAddress, rewardAddress, daoAddress, manifestation);
     }
 
     // initializes: manifestation
-    function initializeManifestation(uint id) external {
+    function initializeManifestation(uint id) external exists(id) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
 
@@ -164,7 +166,7 @@ contract Manifester is IManifester {
         uint duraDays,
         uint dailyReward,
         uint feeDays
-    ) public {
+    ) external exists(id) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
         require(msg.sender == manifestation.daoAddress, 'only the DAO may launch');
@@ -187,13 +189,6 @@ contract Manifester is IManifester {
         
         // transfers: `totalRewards` to the manifestation contract.
         IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, reward);
-    }
-
-    // creates: deposit token (as reward-native pair).
-    function getTokens(uint id) public view returns (address depositAddress, address rewardAddress) {
-        address mAddress = manifestations[id];
-        depositAddress = Manifestation(mAddress).depositAddress();
-        rewardAddress = Manifestation(mAddress).rewardAddress();
     }
 
     //////////////////////////////
@@ -235,6 +230,7 @@ contract Manifester is IManifester {
         uint endTime,
         uint dailyReward, 
         uint feeDays) {
+
         // gets: stored manifestation info by id.
         mAddress = address(manifestations[id]);
         Manifestation m = Manifestation(mAddress);
@@ -265,7 +261,6 @@ contract Manifester is IManifester {
         Manifestation manifestation = Manifestation(mAddress);
         (amount, rewardDebt, withdrawTime, depositTime, timeDelta, deltaDays) = manifestation.getUserInfo(account);
     }
-
 
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
