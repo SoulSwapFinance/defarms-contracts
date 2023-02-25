@@ -97,7 +97,7 @@ contract ManifesterTest is Test {
         uint totalRewards = 100_000;
         uint expected = 1_000;
         uint actual = manifester.getSacrifice(totalRewards) / 1E18;
-        console.log('expected: %s, actuals: %s', expected, actual);
+        // console.log('expected: %s, actuals: %s', expected, actual);
         assertEq(actual, expected, "ok");
     }
 
@@ -118,12 +118,12 @@ contract ManifesterTest is Test {
     // tests: Manifestation Initialization
     function initializeManifestation(uint id) public virtual {
         createManifestation();
-        address daoAddress = manifester.daos(id);
-        address rewardAddress = manifester.rewards(id);
-        console.log('daoAddress: %s', daoAddress);
-        console.log('rewardAddress: %s', rewardAddress);
+        // address daoAddress = manifester.daos(id);
+        // address rewardAddress = manifester.rewards(id);
+        // console.log('daoAddress: %s', daoAddress);
+        // console.log('rewardAddress: %s', rewardAddress);
         manifester.initializeManifestation(
-            0                 // uint id,
+            id                 // uint id,
             // rewardAddress,
             // depositAddress
             // _daoAddress,
@@ -136,7 +136,7 @@ contract ManifesterTest is Test {
     function testManifestation() public virtual {
         createManifestation();
         address actual = manifester.manifestations(0);
-        console.log("Manifestation [0] Address: %s", actual);
+        // console.log("Manifestation [0] Address: %s", actual);
         // expect the address to not be the zero address //
         assertEq(actual != address(0), true, "ok");
     }

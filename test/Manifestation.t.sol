@@ -123,12 +123,12 @@ contract ManifestationTest is Test {
     // tests: Manifestation Initialization
     function initializeManifestation(uint id) public virtual {
         createManifestation();
-        address daoAddress = manifester.daos(id);
-        address rewardAddress = manifester.rewards(id);
-        console.log('daoAddress: %s', daoAddress);
-        console.log('rewardAddress: %s', rewardAddress);
+        // address daoAddress = manifester.daos(id);
+        // address rewardAddress = manifester.rewards(id);
+        // console.log('daoAddress: %s', daoAddress);
+        // console.log('rewardAddress: %s', rewardAddress);
         manifester.initializeManifestation(
-            0                 // uint id,
+            id                 // uint id,
             // rewardAddress,
             // depositAddress
             // _daoAddress,
@@ -141,10 +141,13 @@ contract ManifestationTest is Test {
     function testStartTime() public virtual {
         createManifestation();
         initializeManifestation(0);
-
+        
+        // note: expected = 0 only when not set.
+        uint expected = 0;
         Manifestation _manifestation = Manifestation(manifester.manifestations(0));
         uint startTime = _manifestation.startTime();
-        console.log("start time: %s", startTime);
+        assertEq(startTime, expected, "ok");
+        // console.log("start time: %s", startTime);
     }
 
     function testBar() public {
