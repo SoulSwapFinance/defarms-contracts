@@ -24,7 +24,11 @@ contract Manifester is IManifester {
 
     // todo: create: Manifestations struct //
     struct Manifestations {
+        address rewardAddress;
         address depositAddress;
+        uint duraDays;
+        uint feeDays;
+        uint dailyReward;
     }
 
     mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id

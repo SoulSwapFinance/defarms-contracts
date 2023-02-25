@@ -49,10 +49,10 @@ contract TestContract is Test {
     function testSacrifice() public {
         deployManifester();
         uint totalRewards = 100_000;
-        uint expectation = 1_000;
-        uint result = manifester.getSacrifice(totalRewards) / 1E18;
-        console.log('expectation: %s, results: %s', expectation, result);
-        assertEq(expectation, result, "ok");
+        uint expected = 1_000;
+        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
+        console.log('expected: %s, actuals: %s', expected, actual);
+        assertEq(actual, expected, "ok");
     }
 
     // creates: New Manifestation
@@ -71,10 +71,10 @@ contract TestContract is Test {
     // tests: Sacrifice Accuracy
     function testManifestation() public {
         createManifestation();
-        address expectation = 0x57F0B389C15cF8A077c8e7E18F3963C81D7aFe0E;
-        address result = manifester.manifestations(0);
-        console.log("Manifestation [0] Address: %s", result);
-        assertEq(expectation, result, "ok");
+        address expected = 0x4b25B7852131F7230CFc9265B6058A6aD58035E6;
+        address actual = manifester.manifestations(0);
+        console.log("Manifestation [0] Address: %s", actual);
+        assertEq(actual, expected, "ok");
     }
 
 }

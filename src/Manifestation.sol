@@ -135,7 +135,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
     
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external {
-        require(msg.sender == address(DAO), 'only the Manifester may set rewards');
+        require(msg.sender == address(manifester), 'only the Manifester may set rewards');
         require(!isSetup, 'already setup');
 
         // sets: key info.
