@@ -10,7 +10,8 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test -vv",
-    "test:verbose": "forge test -vvvvv"
+    "test:more": "forge test -vvv",
+    "test:most": "forge test -vvvvv"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.1",

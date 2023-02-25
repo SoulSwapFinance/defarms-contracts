@@ -89,20 +89,6 @@ contract ManifesterTest is Test {
             1_000_000_000           // totalSupply
         );
 
-        // native pair tests //
-        console.log("nativePair Address: %s", address(nativePair));
-        console.log("nativePair Name: %s", nativePair.name());
-        console.log("nativePair Token0: %s", nativePair.token0());
-        console.log("nativePair Token1: %s", nativePair.token1());
-        console.log("nativePair isNative?: %s", nativePair.isNative());
-
-        // stable pair tests //
-        console.log("stablePair Address: %s", address(stablePair));
-        console.log("stablePair Name: %s", stablePair.name());
-        console.log("stablePair Token0: %s", stablePair.token0());
-        console.log("stablePair Token1: %s", stablePair.token1());
-        console.log("stablePair isNative?: %s", stablePair.isNative());
-
         // deploys: Manifester Contract
         manifester = new Manifester(
             address(factory),
@@ -131,21 +117,23 @@ contract ManifesterTest is Test {
     /*/ CONTRACT TESTS /*/
     // 1 // Create Manifestation
     // 2 // Initialize Manifestation
-    // 3 // Calculate Sacrifice
+    // 3 // Native Pair
+    // 4 // Stable Pair
+    // 5 // Calculate Sacrifice
 
     // tests: Manifestation Creation
-    function testCreation() public virtual {
+    function test_1_Creation() public virtual {
         createManifestation();
         address mAddress = manifester.manifestations(0);
-        bool actual = mAddress != address(0);
         bool expected = true;
+        bool actual = mAddress != address(0);
         // expect the address to not be the zero address //
         assertEq(actual, expected, "ok");
-        console.log("[PASS]: mAddress: %s", mAddress);
+        console.log("[+] mAddress: %s", mAddress);
     }
 
     // tests: Manifestation Initialization
-    function testInitialization() public virtual {
+    function test_2_Initialization() public virtual {
         uint id = 0;
         createManifestation();
         manifester.initializeManifestation(id);
@@ -163,44 +151,76 @@ contract ManifesterTest is Test {
         (, , , , , ,uint _dailyReward)         = manifester.mInfo(id);
 
         // verifies: mAddress
-        assertEq(mAddress, _mAddress, "ok");
-        console.log("[PASS]: mAddress: %s", _mAddress);
+        assertEq(_mAddress, mAddress, "ok");
+        console.log("[+] mAddress: %s", mAddress);
 
         // verifies: rewardAddress
-        assertEq(rewardAddress, _rewardAddress, "ok");
-        console.log("[PASS]: rewardAddress: %s", rewardAddress);
+        assertEq(_rewardAddress, rewardAddress, "ok");
+        console.log("[+] rewardAddress: %s", rewardAddress);
 
         // verifies: depositAddress
-        assertEq(depositAddress, _depositAddress, "ok");
-        console.log("[PASS]: depositAddress: %s", depositAddress);
+        assertEq(_depositAddress, depositAddress, "ok");
+        console.log("[+] depositAddress: %s", depositAddress);
 
         // verifies: daoAddress
-        assertEq(daoAddress, _daoAddress, "ok");
-        console.log("[PASS]: daoAddress: %s", daoAddress);
+        assertEq(_daoAddress, daoAddress, "ok");
+        console.log("[+] daoAddress: %s", daoAddress);
 
         // verifies: duraDays
-        assertEq(duraDays, _duraDays, "ok");
-        console.log("[PASS]: duraDays: %s", duraDays);
+        assertEq(_duraDays, duraDays, "ok");
+        console.log("[+] duraDays: %s", duraDays);
 
         // verifies: feeDays
-        assertEq(feeDays, _feeDays, "ok");
-        console.log("[PASS]: feeDays: %s", feeDays);
+        assertEq(_feeDays, feeDays, "ok");
+        console.log("[+] feeDays: %s", feeDays);
 
         // verifies: dailyReward
-        assertEq(dailyReward, _dailyReward, "ok");
-        console.log("[PASS]: dailyReward: %s", dailyReward);
+        assertEq(_dailyReward, dailyReward, "ok");
+        console.log("[+] dailyReward: %s", dailyReward);
 
     }
 
+    function test_3_NativePair() public {
+        deployContracts();
+        bool isNative = true;
+        bool _isNative = nativePair.isNative();
+
+        // native pair tests //
+        // console.log("Address: %s", address(nativePair));
+        // console.log("Name: %s", nativePair.name());
+        // console.log("Token0: %s", nativePair.token0());
+        // console.log("Token1: %s", nativePair.token1());
+
+        assertEq(_isNative, isNative, "ok");
+        console.log("[+] isNative?: %s", nativePair.isNative());
+        console.log("[+] nativePair: %s", address(nativePair));
+    }
+
+    function test_4_StablePair() public {
+        deployContracts();
+        bool isNative = false;
+        bool _isNative = stablePair.isNative();
+
+        // stable pair tests //
+        // console.log("Address: %s", address(stablePair));
+        // console.log("Name: %s", stablePair.name());
+        // console.log("Token0: %s", stablePair.token0());
+        // console.log("Token1: %s", stablePair.token1());
+
+        assertEq(_isNative, isNative, "ok");
+        console.log("[+] isNative?: %s", stablePair.isNative());
+        console.log("[+] stablePair: %s", address(stablePair));
+    }
+
     // tests: Sacrifice Accuracy
-    function testSacrifice() public {
+    function test_5_Sacrifice() public {
         deployContracts();
         uint totalRewards = 100_000;
         uint expected = 1_000;
         uint actual = manifester.getSacrifice(totalRewards) / 1E18;
         // console.log('expected: %s, actuals: %s', expected, actual);
         assertEq(actual, expected, "ok");
-        console.log("[PASS]: getSacrifice(100K): %s", actual);
+        console.log("[+] getSacrifice(100K): %s", actual);
     }
 
 }
