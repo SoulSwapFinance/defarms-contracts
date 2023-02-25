@@ -72,6 +72,19 @@ contract TestContract is Test {
         );
     }
 
+    // creates: New Manifestation
+    function createManifestation() public {
+        deployManifester();
+
+        manifester.createManifestation(
+        rewardAddress,      // address rewardAddress, 
+        depositAddress,     // address depositAddress,
+        duraDays,           // uint duraDays, 
+        feeDays,            // uint feeDays, 
+        dailyReward         // uint dailyReward
+        );
+    }
+
     function testBar() public {
         assertEq(uint256(1), uint256(1), "ok");
     }
