@@ -9,7 +9,8 @@
   "private": true,
   "scripts": {
     "build": "forge build",
-    "test": "forge test"
+    "test": "forge test -vv",
+    "test:verbose": "forge test -vvvvv"
   },
   "dependencies": {
     "forge-std": "1.1.2"
