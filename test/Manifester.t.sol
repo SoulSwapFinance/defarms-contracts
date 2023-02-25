@@ -8,16 +8,21 @@ import { Utilities } from "./utils/Utilities.sol";
 import "src/Manifestation.sol";
 import "src/Manifester.sol";
 import "src/mocks/MockToken.sol";
+import "src/mocks/MockPair.sol";
 import "src/mocks/MockFactory.sol";
 
 contract ManifesterTest is Test {
     Manifester manifester;
     Manifestation manifestation;
     MockToken rewardToken;
-    MockToken depositToken;
     MockToken wnativeToken;
     MockToken usdcToken;
+    MockToken depositToken;
+    MockPair nativePair;
+    MockPair stablePair;
+
     // ISoulSwapPair depositToken;
+    // address depositAddress;
     MockFactory factory;
     Utilities internal utils;
 
@@ -26,26 +31,20 @@ contract ManifesterTest is Test {
     uint public duraDays = 90;
     uint public feeDays = 14;
     uint public dailyReward = 100;
-    // string public nativeSymbol = "FTM";
 
     // admins //
     address payable[] internal admins;
     address internal soulDAO; // = msg.sender;
     address internal daoAddress = msg.sender;
 
-    // users //
-    address payable[] internal users;
-    address internal alice;
-    address internal bob;
-
     // addresses //
-    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM Oracle (250)
-    // address rewardAddress = 0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07; // SOUL
-    // address depositAddress = 0xa2527Af9DABf3E3B4979d7E0493b5e2C6e63dC57; // SOUL-FTM
-    // address assetAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
-    // address wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
+    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
 
     function deployContracts() public virtual {
+
+        // deploys: Mock Factory
+        factory = new MockFactory();
+
         // deploys: Native Token
         wnativeToken = new MockToken(
             "Wrapped Fantom",
@@ -66,7 +65,7 @@ contract ManifesterTest is Test {
             "REWARD",
             1_000_000_000
         );
-        
+
         // deploys: Deposit Token
         depositToken = new MockToken(
             "DepositToken",
@@ -74,8 +73,35 @@ contract ManifesterTest is Test {
             1_000_000_000
         );
 
-        // deploys: Mock Factory
-        factory = new MockFactory();
+        nativePair = new MockPair(
+            address(factory),       // factoryAddress
+            address(rewardToken),   // token0Address
+            address(wnativeToken),  // token1Address
+            address(wnativeToken),  // wnativeAddress
+            1_000_000_000           // totalSupply
+        );
+
+        stablePair = new MockPair(
+            address(factory),       // factoryAddress
+            address(rewardToken),   // token0Address
+            address(usdcToken),     // token1Address
+            address(wnativeToken),  // wnativeAddress
+            1_000_000_000           // totalSupply
+        );
+
+        // native pair tests //
+        console.log("nativePair Address: %s", address(nativePair));
+        console.log("nativePair Name: %s", nativePair.name());
+        console.log("nativePair Token0: %s", nativePair.token0());
+        console.log("nativePair Token1: %s", nativePair.token1());
+        console.log("nativePair isNative?: %s", nativePair.isNative());
+
+        // stable pair tests //
+        console.log("stablePair Address: %s", address(stablePair));
+        console.log("stablePair Name: %s", stablePair.name());
+        console.log("stablePair Token0: %s", stablePair.token0());
+        console.log("stablePair Token1: %s", stablePair.token1());
+        console.log("stablePair isNative?: %s", stablePair.isNative());
 
         // deploys: Manifester Contract
         manifester = new Manifester(
@@ -86,7 +112,6 @@ contract ManifesterTest is Test {
             oracleDecimals,
             wnativeToken.symbol()
         );
-
     }
 
     // creates: New Manifestation
