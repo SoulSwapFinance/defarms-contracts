@@ -112,13 +112,11 @@ contract Manifester is IManifester {
         // IERC20(rewardAddress).safeTransferFrom(msg.sender, manifestation, rewards); // todo: re-enable
 
         // creates: new manifestation based off of the inputs, then stores as an array.
-        // inputs: rewardAddress, depositAddress, DAO, manifester.
-        Manifestation(manifestation).manifest(rewardAddress, depositAddress, msg.sender, address(this));
-        
+        // Manifestation(manifestation).manifest(rewardAddress, depositAddress, msg.sender, address(this));
+
         // sets: the rewards data for the newly-created manifestation.
-        // inputs: duraDays, feeDays, dailyReward.aa
-        Manifestation(manifestation).setRewards(duraDays, feeDays, dailyReward);
-        
+        // Manifestation(manifestation).setRewards(duraDays, feeDays, dailyReward);
+
         // populates: the getManifestation mapping.
         getManifestation[depositAddress][id] = manifestation;
 
@@ -131,7 +129,7 @@ contract Manifester is IManifester {
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, manifestation);
     }
 
-    function launchManifestation(uint id, uint duraDays, uint dailyReward) public {
+    function launchManifestation(uint id, uint duraDays, uint dailyReward, uint feeDays) public {
         uint rewards = getTotalRewards(duraDays, dailyReward);
         uint sacrifice = getSacrifice(fromWei(rewards));
         uint total = rewards + sacrifice;
@@ -143,6 +141,12 @@ contract Manifester is IManifester {
 
         require(msg.sender == daoAddress, 'only the DAO may launch');
 
+        // creates: new manifestation based off of the inputs, then stores as an array.
+        Manifestation(mAddress).manifest(rewardAddress, depositAddress, msg.sender, address(this));
+
+        // sets: the rewards data for the newly-created manifestation.
+        Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
+    
         // checks: the creator has a sufficient balance to cover both rewards + sacrifice. // todo: re-enable
         require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
 

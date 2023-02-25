@@ -45,12 +45,35 @@ contract TestContract is Test {
         );
     }
 
+    // tests: Sacrifice Accuracy
     function testSacrifice() public {
         deployManifester();
         uint totalRewards = 100_000;
         uint expectation = 1_000;
         uint result = manifester.getSacrifice(totalRewards) / 1E18;
         console.log('expectation: %s, results: %s', expectation, result);
+        assertEq(expectation, result, "ok");
+    }
+
+    // creates: New Manifestation
+    function createManifestation() public {
+        deployManifester();
+
+        manifester.createManifestation(
+        rewardAddress,      // address rewardAddress, 
+        depositAddress,     // address depositAddress,
+        duraDays,           // uint duraDays, 
+        feeDays,            // uint feeDays, 
+        dailyReward         // uint dailyReward
+        );
+    }
+
+    // tests: Sacrifice Accuracy
+    function testManifestation() public {
+        createManifestation();
+        address expectation = 0x57F0B389C15cF8A077c8e7E18F3963C81D7aFe0E;
+        address result = manifester.manifestations(0);
+        console.log("Manifestation [0] Address: %s", result);
         assertEq(expectation, result, "ok");
     }
 
