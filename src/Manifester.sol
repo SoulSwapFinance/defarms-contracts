@@ -31,22 +31,21 @@ contract Manifester is IManifester {
         address rewardAddress;
         address depositAddress;
         address daoAddress;
-        // uint duraDays;
-        // uint feeDays;
-        // uint dailyReward;
+        uint duraDays;
+        uint feeDays;
+        uint dailyReward;
     }
 
     // manifestation info
     Manifestations[] public mInfo;
 
-
-    mapping(address => mapping(uint => address)) public getManifestation; // creatorAddress, id
+    mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id
 
     event SummonedManifestation(
         uint indexed id,
-        address indexed creatorAddress, 
+        address indexed depositAddress, 
         address rewardAddress, 
-        address depositAddress, 
+        address creatorAddress, 
         address manifestation
     );
 
@@ -83,7 +82,11 @@ contract Manifester is IManifester {
 
     function createManifestation(
         address rewardAddress, 
-        address depositAddress
+        address depositAddress,
+        address daoAddress,
+        uint duraDays,
+        uint feeDays,
+        uint dailyReward
         // address daoAddress
     ) external whileActive returns (address manifestation, uint id) {
         // address depositAddress = SoulSwapFactory.getPair(wnativeAddress, rewardAddress);
@@ -106,15 +109,15 @@ contract Manifester is IManifester {
         // ensures: depositAddress is never 0x.
         require(depositAddress != address(0), 'depositAddress must be SoulSwap LP');
         // ensures: unique depositAddress-id mapping.
-        require(getManifestation[msg.sender][id] == address(0), 'reward already exists'); // single check is sufficient
-        
+        require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
+
         // generates the creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
 
-        // populates: the getManifestation mapping.
-        getManifestation[msg.sender][id] = manifestation;
+        // populates: the getManifestation using the depositAddress and id.
+        getManifestation[depositAddress][id] = manifestation;
 
         // stores the manifestation to the manifestations[] array
         manifestations.push(manifestation);
@@ -136,15 +139,15 @@ contract Manifester is IManifester {
             mAddress: manifestations[id],
             rewardAddress: rewardAddress,
             depositAddress: depositAddress,
-            daoAddress: daos[id]
-            // duraDays;
-            // feeDays;
-            // dailyReward;
+            daoAddress: daoAddress,
+            duraDays: duraDays,
+            feeDays: feeDays,
+            dailyReward: dailyReward
         }));
 
-        // _initializeManifestation(rewardAddress, depositAddress, msg.sender, manifestation);
+        // _initializeManifestation(rewardAddress, depositAddress, daoAddress, manifestation);
 
-        emit SummonedManifestation(id, msg.sender, rewardAddress, depositAddress, manifestation);
+        emit SummonedManifestation(id, depositAddress, rewardAddress, daoAddress, manifestation);
     }
 
     // initializes manifestation
@@ -153,21 +156,12 @@ contract Manifester is IManifester {
         // address _rewardAddress,
         // address _depositAddress
     ) external {
-        // gets: associated stored variables from the struct
-        // Manifestations storage manifestation = mInfo[id];
-        // references: associated daoAddress //
-        // address mAddress_ = manifestation.mAddress;
-        // address rewardAddress_ = manifestation.rewardAddress;
-        // address depositAddress_ = manifestation.depositAddress;
-        // address daoAddress_ = manifestation.daoAddress;
-
-        // gets: associated variables from manifestation
+    
+        // gets: associated variables from id.
         address mAddress = manifestations[id];
         address daoAddress = daos[id];
         address rewardAddress = rewards[id];
         address depositAddress = deposits[id];
-        // address rewardAddress = Manifestation(mAddress).rewardAddress();
-        // address depositAddress = Manifestation(mAddress).depositAddress();
 
         // requires: sender is the DAO
         require(msg.sender == daoAddress, "only the DAO may initialize");
@@ -193,7 +187,7 @@ contract Manifester is IManifester {
     //     address mAddress = manifestations[id];
     //     (address depositAddress, address rewardAddress) = getTokens(id);
 
-    //     // require(getManifestation[msg.sender][id] != address(0), 'manifestation invalid');
+    //     // require(getManifestation[depositAddress][id] != address(0), 'manifestation invalid');
 
     //     // creates: new manifestation based off of the inputs, then stores as an array.
     //     Manifestation(mAddress).manifest(rewardAddress, depositAddress, msg.sender, address(this));

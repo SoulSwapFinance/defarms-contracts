@@ -15,6 +15,8 @@ contract ManifesterTest is Test {
     Manifestation manifestation;
     MockToken rewardToken;
     MockToken depositToken;
+    MockToken wnativeToken;
+    MockToken usdcToken;
     // ISoulSwapPair depositToken;
     MockFactory factory;
     Utilities internal utils;
@@ -24,12 +26,12 @@ contract ManifesterTest is Test {
     uint public duraDays = 90;
     uint public feeDays = 14;
     uint public dailyReward = 100;
-    string public nativeSymbol = "FTM";
+    // string public nativeSymbol = "FTM";
 
     // admins //
     address payable[] internal admins;
     address internal soulDAO; // = msg.sender;
-    // address internal daoAddress; // = msg.sender;
+    address internal daoAddress = msg.sender;
 
     // users //
     address payable[] internal users;
@@ -37,68 +39,45 @@ contract ManifesterTest is Test {
     address internal bob;
 
     // addresses //
-    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
+    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM Oracle (250)
     // address rewardAddress = 0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07; // SOUL
     // address depositAddress = 0xa2527Af9DABf3E3B4979d7E0493b5e2C6e63dC57; // SOUL-FTM
     // address assetAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
-    address wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
+    // address wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
 
-
-    // deploys: Contracts
     function deployContracts() public virtual {
-        deployManifester();
-        deployFactory();
-        deployRewardToken();
-        deployDepositToken();
-    }
-
-    // deploys: Manifester Contract
-    function deployManifester() public virtual {
-        manifester = new Manifester(
-            wnativeAddress,
-            nativeOracle,
-            oracleDecimals,
-            nativeSymbol
+        // deploys: Native Token
+        wnativeToken = new MockToken(
+            "NativeToken",
+            "NATIVE",
+            1_000_000_000
         );
 
-        console.log('[SUCCESS] Manifester Deployed');
-    }
-
-    // deploys: Mock Factory
-    function deployFactory() public virtual {
-        factory = new MockFactory();
-        console.log("[SUCCESS] SoulSwapFactory Deployed");
-    }
-
-    // deploys: Reward Token
-    function deployRewardToken() public virtual {
+        // deploys: Reward Token
         rewardToken = new MockToken(
             "RewardToken",
             "REWARD",
             1_000_000_000
         );
-        console.log("[SUCCESS] RewardToken Deployed");
-    }
-
-    // deploys: Deposit Token (todo: create with factory)
-    function deployDepositToken() public virtual {
+        
+        // deploys: Deposit Token
         depositToken = new MockToken(
             "DepositToken",
             "DEPOSIT",
             1_000_000_000
         );
-        console.log("[SUCCESS] DepositToken Deployed");
-    }
 
+        // deploys: Manifester Contract
+        manifester = new Manifester(
+            address(wnativeToken),
+            nativeOracle,
+            oracleDecimals,
+            wnativeToken.symbol()
+        );
 
-    // tests: Sacrifice Accuracy
-    function testSacrifice() public {
-        deployManifester();
-        uint totalRewards = 100_000;
-        uint expected = 1_000;
-        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
-        // console.log('expected: %s, actuals: %s', expected, actual);
-        assertEq(actual, expected, "ok");
+        // deploys: Mock Factory
+        factory = new MockFactory();
+
     }
 
     // creates: New Manifestation
@@ -107,61 +86,84 @@ contract ManifesterTest is Test {
 
         manifester.createManifestation(
         address(rewardToken),       // address rewardAddress, 
-        address(depositToken)       // address depositAddress,
-        // daoAddress               // address daoAddress,
-        // duraDays,                // uint duraDays, 
-        // feeDays,                 // uint feeDays, 
-        // dailyReward              // uint dailyReward
+        address(depositToken),      // address depositAddress,
+        daoAddress,                 // address daoAddress,
+        duraDays,                   // uint duraDays, 
+        feeDays,                    // uint feeDays, 
+        dailyReward                 // uint dailyReward
         );
     }
 
-    // tests: Manifestation Initialization
-    function initializeManifestation(uint id) public virtual {
-        createManifestation();
-        // address daoAddress = manifester.daos(id);
-        // address rewardAddress = manifester.rewards(id);
-        // console.log('daoAddress: %s', daoAddress);
-        // console.log('rewardAddress: %s', rewardAddress);
-        manifester.initializeManifestation(
-            id                 // uint id,
-            // rewardAddress,
-            // depositAddress
-            // _daoAddress,
-            // _mAddress
-        );
-        console.log('[SUCCESS] Manifestation Initialized');
-    }
+    /*/ CONTRACT TESTS /*/
 
     // tests: Manifestation Creation
-    function testManifestation() public virtual {
+    function testCreation() public virtual {
         createManifestation();
-        address actual = manifester.manifestations(0);
-        // console.log("Manifestation [0] Address: %s", actual);
+        address mAddress = manifester.manifestations(0);
+        bool actual = mAddress != address(0);
+        bool expected = true;
         // expect the address to not be the zero address //
-        assertEq(actual != address(0), true, "ok");
+        assertEq(actual, expected, "ok");
+        console.log("[PASS]: mAddress: %s", mAddress);
     }
 
     // tests: Manifestation Initialization
     function testInitialization() public virtual {
-        initializeManifestation(0);
+        uint id = 0;
+        createManifestation();
+        manifester.initializeManifestation(id);
+
+        address mAddress = manifester.manifestations(id);
+        address rewardAddress = address(rewardToken);
+        address depositAddress = address(depositToken);
+
+        (address _mAddress, , , , , ,)         = manifester.mInfo(id);
+        (,address _rewardAddress, , , , ,)     = manifester.mInfo(id);
+        (, ,address _depositAddress, , , ,)    = manifester.mInfo(id);
+        (, , ,address _daoAddress, , ,)        = manifester.mInfo(id);
+        (, , , ,uint _duraDays, ,)             = manifester.mInfo(id);
+        (, , , , ,uint _feeDays,)              = manifester.mInfo(id);
+        (, , , , , ,uint _dailyReward)         = manifester.mInfo(id);
+
+        // verifies: mAddress
+        assertEq(mAddress, _mAddress, "ok");
+        console.log("[PASS]: mAddress: %s", _mAddress);
+
+        // verifies: rewardAddress
+        assertEq(rewardAddress, _rewardAddress, "ok");
+        console.log("[PASS]: rewardAddress: %s", rewardAddress);
+
+        // verifies: depositAddress
+        assertEq(depositAddress, _depositAddress, "ok");
+        console.log("[PASS]: depositAddress: %s", depositAddress);
+
+        // verifies: daoAddress
+        assertEq(daoAddress, _daoAddress, "ok");
+        console.log("[PASS]: daoAddress: %s", daoAddress);
+
+        // verifies: duraDays
+        assertEq(duraDays, _duraDays, "ok");
+        console.log("[PASS]: duraDays: %s", duraDays);
+
+        // verifies: feeDays
+        assertEq(feeDays, _feeDays, "ok");
+        console.log("[PASS]: feeDays: %s", feeDays);
+
+        // verifies: dailyReward
+        assertEq(dailyReward, _dailyReward, "ok");
+        console.log("[PASS]: dailyReward: %s", dailyReward);
+
     }
 
-
-    // tests: Manifestation Launch
-    // function testLaunch() public {
-    //     createManifestation();
-        // uint id = 0;
-        // uint manifestation;
-        // manifester.launchManifestation(
-        //     id,
-        //     duraDays,
-        //     dailyReward,
-        //     feeDays
-        // );
-        // address actual = manifester.manifestations(0);
-        // console.log("Manifestation [0] Address: %s", actual);
-        // expect the address to not be the zero address //
-        // assertEq(actual != address(0), true, "ok");
-    // }
+    // tests: Sacrifice Accuracy
+    function testSacrifice() public {
+        deployContracts();
+        uint totalRewards = 100_000;
+        uint expected = 1_000;
+        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
+        // console.log('expected: %s, actuals: %s', expected, actual);
+        assertEq(actual, expected, "ok");
+        console.log("[PASS]: getSacrifice(100K): %s", actual);
+    }
 
 }
