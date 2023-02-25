@@ -11,6 +11,9 @@ contract Manifester is IManifester {
     uint256 public totalManifestations;
 
     address[] public manifestations;
+    address[] public daos;
+    address[] public rewards;
+    address[] public deposits;
     address public override soulDAO;
 
     IOracle public nativeOracle;
@@ -24,21 +27,27 @@ contract Manifester is IManifester {
 
     // todo: create: Manifestations struct //
     struct Manifestations {
+        address mAddress;
         address rewardAddress;
         address depositAddress;
-        uint duraDays;
-        uint feeDays;
-        uint dailyReward;
+        address daoAddress;
+        // uint duraDays;
+        // uint feeDays;
+        // uint dailyReward;
     }
 
-    mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id
+    // manifestation info
+    Manifestations[] public mInfo;
+
+
+    mapping(address => mapping(uint => address)) public getManifestation; // creatorAddress, id
 
     event SummonedManifestation(
-            uint indexed id,
-            address indexed depositAddress, 
-            address rewardAddress, 
-            address creatorAddress, 
-            address manifestation
+        uint indexed id,
+        address indexed creatorAddress, 
+        address rewardAddress, 
+        address depositAddress, 
+        address manifestation
     );
 
     event Paused(address msgSender);
@@ -74,10 +83,8 @@ contract Manifester is IManifester {
 
     function createManifestation(
         address rewardAddress, 
-        address depositAddress,
-        uint duraDays, 
-        uint feeDays, 
-        uint dailyReward
+        address depositAddress
+        // address daoAddress
     ) external whileActive returns (address manifestation, uint id) {
         // address depositAddress = SoulSwapFactory.getPair(wnativeAddress, rewardAddress);
         // ensures: reward token has 18 decimals, which is needed for reward calculations.
@@ -99,68 +106,114 @@ contract Manifester is IManifester {
         // ensures: depositAddress is never 0x.
         require(depositAddress != address(0), 'depositAddress must be SoulSwap LP');
         // ensures: unique depositAddress-id mapping.
-        require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
+        require(getManifestation[msg.sender][id] == address(0), 'reward already exists'); // single check is sufficient
         
-        // checks: the creator has a sufficient balance to cover both rewards + sacrifice. // todo: re-enable
-        // require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
-
         // generates the creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
 
-        // transfers: sacrifice directly to soulDAO.
-        // IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice); // todo: re-enable
-        
-        // transfers: `totalRewards` to the manifestation contract.
-        // IERC20(rewardAddress).safeTransferFrom(msg.sender, manifestation, rewards); // todo: re-enable
-
-        // creates: new manifestation based off of the inputs, then stores as an array.
-        // Manifestation(manifestation).manifest(rewardAddress, depositAddress, msg.sender, address(this));
-
-        // sets: the rewards data for the newly-created manifestation.
-        // Manifestation(manifestation).setRewards(duraDays, feeDays, dailyReward);
-
         // populates: the getManifestation mapping.
-        getManifestation[depositAddress][id] = manifestation;
+        getManifestation[msg.sender][id] = manifestation;
 
         // stores the manifestation to the manifestations[] array
         manifestations.push(manifestation);
 
+        // stores the dao to the daos[] array
+        daos.push(msg.sender);
+        
+        // stores the rewards to the daos[] array
+        rewards.push(rewardAddress);
+
+        // stores the deposits to the daos[] array
+        deposits.push(depositAddress);
+
         // increments: the total number of manifestations
         totalManifestations++;
 
-        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, manifestation);
+        // appends and populates: a new Manifestations struct (instance).
+        mInfo.push(Manifestations({
+            mAddress: manifestations[id],
+            rewardAddress: rewardAddress,
+            depositAddress: depositAddress,
+            daoAddress: daos[id]
+            // duraDays;
+            // feeDays;
+            // dailyReward;
+        }));
+
+        // _initializeManifestation(rewardAddress, depositAddress, msg.sender, manifestation);
+
+        emit SummonedManifestation(id, msg.sender, rewardAddress, depositAddress, manifestation);
     }
 
-    function launchManifestation(uint id, uint duraDays, uint dailyReward, uint feeDays) public {
-        uint rewards = getTotalRewards(duraDays, dailyReward);
-        uint sacrifice = getSacrifice(fromWei(rewards));
-        uint total = rewards + sacrifice;
+    // initializes manifestation
+    function initializeManifestation(
+        uint id
+        // address _rewardAddress,
+        // address _depositAddress
+    ) external {
+        // gets: associated stored variables from the struct
+        // Manifestations storage manifestation = mInfo[id];
+        // references: associated daoAddress //
+        // address mAddress_ = manifestation.mAddress;
+        // address rewardAddress_ = manifestation.rewardAddress;
+        // address depositAddress_ = manifestation.depositAddress;
+        // address daoAddress_ = manifestation.daoAddress;
+
+        // gets: associated variables from manifestation
         address mAddress = manifestations[id];
-        (address depositAddress, address rewardAddress) = getTokens(id);
+        address daoAddress = daos[id];
+        address rewardAddress = rewards[id];
+        address depositAddress = deposits[id];
+        // address rewardAddress = Manifestation(mAddress).rewardAddress();
+        // address depositAddress = Manifestation(mAddress).depositAddress();
 
-        require(getManifestation[depositAddress][id] != address(0), 'manifestation invalid');
-        address daoAddress = Manifestation(mAddress).DAO();
-
-        require(msg.sender == daoAddress, 'only the DAO may launch');
+        // requires: sender is the DAO
+        require(msg.sender == daoAddress, "only the DAO may initialize");
 
         // creates: new manifestation based off of the inputs, then stores as an array.
-        Manifestation(mAddress).manifest(rewardAddress, depositAddress, msg.sender, address(this));
-
-        // sets: the rewards data for the newly-created manifestation.
-        Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
-    
-        // checks: the creator has a sufficient balance to cover both rewards + sacrifice. // todo: re-enable
-        require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
-
-        // transfers: sacrifice directly to soulDAO.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice); // todo: re-enable
-        
-        // transfers: `totalRewards` to the manifestation contract.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, rewards); // todo: re-enable
-
+        Manifestation(mAddress).manifest(
+            rewardAddress,
+            depositAddress
+            // daoAddress
+            // address(this)
+        );
     }
+
+    // function launchManifestation(
+    //     uint id,
+    //     uint duraDays,
+    //     uint dailyReward,
+    //     uint feeDays
+    // ) public {
+    //     // uint rewards = getTotalRewards(duraDays, dailyReward);
+    //     // uint sacrifice = getSacrifice(fromWei(rewards));
+    //     // uint total = rewards + sacrifice;
+    //     address mAddress = manifestations[id];
+    //     (address depositAddress, address rewardAddress) = getTokens(id);
+
+    //     // require(getManifestation[msg.sender][id] != address(0), 'manifestation invalid');
+
+    //     // creates: new manifestation based off of the inputs, then stores as an array.
+    //     Manifestation(mAddress).manifest(rewardAddress, depositAddress, msg.sender, address(this));
+
+    //     address daoAddress = getDAO[depositAddress][id];
+    //     require(msg.sender == daoAddress, 'only the DAO may launch');
+
+    //     // sets: the rewards data for the newly-created manifestation.
+    //     Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
+    
+    //     // checks: the creator has a sufficient balance to cover both rewards + sacrifice. // todo: re-enable
+    //     // require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
+
+    //     // transfers: sacrifice directly to soulDAO.
+    //     // IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice); // todo: re-enable
+        
+    //     // transfers: `totalRewards` to the manifestation contract.
+    //     // IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, rewards); // todo: re-enable
+
+    // }
 
     // creates: deposit token (as reward-native pair).
     function getTokens(uint id) public view returns (address depositAddress, address rewardAddress) {
@@ -191,14 +244,15 @@ contract Manifester is IManifester {
     }
 
     // returns: sacrifice amount.
-    function getSacrifice(uint rewards) public view returns (uint) {
-        uint sacrifice = (rewards * bloodSacrifice) / 100;
+    function getSacrifice(uint _rewards) public view returns (uint) {
+        uint sacrifice = (_rewards * bloodSacrifice) / 100;
         return sacrifice;
     }
 
     // returns: info for a given id.
     function getInfo(uint id) external view returns (
-        address mAddress, 
+        address mAddress,
+        address daoAddress,
         string memory name, 
         string memory symbol, 
         string memory logoURI,
@@ -213,6 +267,7 @@ contract Manifester is IManifester {
         uint dailyReward, 
         uint feeDays) {
         mAddress = address(manifestations[id]);
+        daoAddress = address(daos[id]);
         Manifestation manifestation = Manifestation(mAddress);
 
         name = manifestation.name();

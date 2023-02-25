@@ -96,27 +96,35 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
+    // ensures: only the Manifester address is the sender.
+    modifier onlyManifester() {
+        require(address(manifester) == msg.sender, "onlyManifester: caller is not the Manifester address");
+        _;
+    }
+
     event Harvested(address indexed user, uint amount, uint timestamp);
     event Deposited(address indexed user, uint amount, uint timestamp);
     event Withdrawn(address indexed user, uint amount, uint feeAmount, uint timestamp);
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
     event FeeDaysUpdated(uint feeDays);
 
+    // sets the manifester at creation //
+    constructor() {
+        manifester = IManifester(msg.sender);
+    }
+
     // initializes: manifestation by the manifester (at creation).
     function manifest(
         address _rewardAddress,
-        address _depositAddress,
-        address _DAO,
-        address _manifesterAddress
-
-        ) external {
+        address _depositAddress
+        // address _DAO
+        ) external onlyManifester {
         require(!isManifested, 'initialize once');
 
         // sets: from input data.
         rewardToken = IERC20(_rewardAddress);
         depositToken = IERC20(_depositAddress);
-        DAO = _DAO;
-        manifester = IManifester(_manifesterAddress);
+        // DAO = msg.sender; // _DAO;
 
         // sets: initial states.
         isManifested = true;
@@ -125,13 +133,14 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // sets: key data.
         soulDAO = manifester.soulDAO();
         wnativeAddress = manifester.wnativeAddress();
-        nativeSymbol = manifester.nativeSymbol();
+        // nativeSymbol = manifester.nativeSymbol();
+        // assetSymbol = manifester.assetSymbol();
 
-        creatorAddress = _DAO;
+        creatorAddress = msg.sender; // _DAO;
 
         // constructs: name that corresponds to the rewardToken.
-        name = string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name()));
-        symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', nativeSymbol, ' MP'));
+        name = "Manifest: RewardToken"; // string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name())); // todo: re-enable [prod]
+        symbol = "REWARD-FTM MP"; // = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', assetSymbol, ' MP')); // // todo: re-enable [prod]
     }
     
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external {

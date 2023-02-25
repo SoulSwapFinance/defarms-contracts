@@ -7,10 +7,16 @@ import { Utilities } from "./utils/Utilities.sol";
 
 import "src/Manifestation.sol";
 import "src/Manifester.sol";
+import "src/mocks/MockToken.sol";
+import "src/mocks/MockFactory.sol";
 
-contract TestContract is Test {
+contract ManifestationTest is Test {
     Manifester manifester;
     Manifestation manifestation;
+    MockToken rewardToken;
+    MockToken depositToken;
+    // ISoulSwapPair depositToken;
+    MockFactory factory;
     Utilities internal utils;
 
     // constants //
@@ -22,8 +28,8 @@ contract TestContract is Test {
 
     // admins //
     address payable[] internal admins;
-    address internal soulDAO;
-    address internal DAO;
+    address internal soulDAO; // = msg.sender;
+    // address internal daoAddress; // = msg.sender;
 
     // users //
     address payable[] internal users;
@@ -32,34 +38,17 @@ contract TestContract is Test {
 
     // addresses //
     address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
-    address rewardAddress = 0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07; // SOUL
-    address depositAddress = 0xa2527Af9DABf3E3B4979d7E0493b5e2C6e63dC57; // SOUL-FTM
+    // address rewardAddress = 0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07; // SOUL
+    // address depositAddress = 0xa2527Af9DABf3E3B4979d7E0493b5e2C6e63dC57; // SOUL-FTM
     address assetAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
     address wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83; // WFTM
 
-    // sets: Key Components
-    function setUp() public virtual {
-        setAccounts();
+    // deploys: Contracts
+    function deployContracts() public virtual {
         deployManifester();
-    }
-
-    // sets: Accounts
-    function setAccounts() public virtual {
-        utils = new Utilities();
-        admins = utils.createUsers(5);
-        users = utils.createUsers(5);
-
-        // creates: administrators //
-        soulDAO = admins[0];
-        vm.label(soulDAO, "SoulSwap DAO");
-        DAO = admins[0];
-        vm.label(DAO, "Project DAO");
-
-        // creates: users //
-        alice = users[0];
-        vm.label(alice, "Alice");
-        bob = users[1];
-        vm.label(bob, "Bob");
+        deployFactory();
+        deployRewardToken();
+        deployDepositToken();
     }
 
     // deploys: Manifester Contract
@@ -70,19 +59,64 @@ contract TestContract is Test {
             oracleDecimals,
             nativeSymbol
         );
+
+        console.log('[SUCCESS] Manifester Deployed');
     }
+
+    // deploys: Mock Factory
+    function deployFactory() public virtual {
+        factory = new MockFactory();
+        console.log("[SUCCESS] SoulSwapFactory Deployed");
+    }
+
+    // deploys: Reward Token
+    function deployRewardToken() public virtual {
+        rewardToken = new MockToken(
+            "RewardToken",
+            "REWARD",
+            1_000_000_000
+        );
+        console.log("[SUCCESS] RewardToken Deployed");
+    }
+
+    // deploys: Deposit Token (todo: create with factory)
+    function deployDepositToken() public virtual {
+        depositToken = new MockToken(
+            "DepositToken",
+            "DEPOSIT",
+            1_000_000_000
+        );
+        console.log("[SUCCESS] DepositToken Deployed");
+    }
+
+    // deploys: Deposit Token (todo: create with factory)
+    // function createDepositToken() public virtual {
+    //     depositToken = new SoulSwapPair(
+    //         "DepositToken",
+    //         "DEPOSIT",
+    //         1_000_000_000
+    //     );
+    //     console.log("[SUCCESS] DepositToken Deployed");
+    // }
 
     // creates: New Manifestation
     function createManifestation() public {
         deployManifester();
+        deployRewardToken();
+        deployDepositToken();
+        // createDepositPair();
+        // address rewardAddress = address(rewardToken);
+        // address depositAddress = address(depositToken);
 
         manifester.createManifestation(
-        rewardAddress,      // address rewardAddress, 
-        depositAddress,     // address depositAddress,
-        duraDays,           // uint duraDays, 
-        feeDays,            // uint feeDays, 
-        dailyReward         // uint dailyReward
+        address(rewardToken),       // address rewardAddress, 
+        address(depositToken)       // address depositAddress,
+        // daoAddress               // address daoAddress,
+        // duraDays,                // uint duraDays, 
+        // feeDays,                 // uint feeDays, 
+        // dailyReward              // uint dailyReward
         );
+        console.log("[SUCCESS] Manifestation Created");
     }
 
     function testBar() public {
