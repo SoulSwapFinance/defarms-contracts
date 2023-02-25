@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.0;
+pragma solidity >=0.8.9;
 
 import './Manifestation.sol';
 
@@ -15,8 +15,9 @@ contract Manifester is IManifester {
 
     address public override soulDAO;
 
-    IOracle public nativeOracle;
-    uint public oracleDecimals;
+    // immatable oracle constants
+    IOracle private immutable nativeOracle;
+    uint private immutable oracleDecimals;
 
     string public override nativeSymbol;
     address public override wnativeAddress;
