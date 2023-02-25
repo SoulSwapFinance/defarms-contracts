@@ -1,0 +1,17 @@
+{
+  "name": "defarms-contracts",
+  "version": "1.0.0",
+  "description": "smart contracts for decentralized farms",
+  "main": "index.js",
+  "repository": "https://github.com/SoulSwapFinance/defarms-contracts.git",
+  "author": "Buns <bunsthedev@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test"
+  },
+  "dependencies": {
+    "forge-std": "1.1.2"
+  }
+}
