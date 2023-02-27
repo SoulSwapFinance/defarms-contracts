@@ -50,6 +50,7 @@ interface IManifestation {
     function name() external returns (string memory);
     function symbol() external returns (string memory);
     function logoURI() external returns (string memory);
+    function assetSymbol() external returns (string memory);
 
     function depositAddress() external returns (address);
     function rewardAddress() external returns (address);

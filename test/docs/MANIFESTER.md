@@ -1,58 +1,56 @@
-# Manifester: Unit Tests
+# **Manifester Tests**
 
-## Constants
-- [ .. ] INIT_CODE_PAIR_HASH
-    - [ .. ] verify accuracy
-- [ .. ] wnativeAddress
-    - [ .. ] verify accuracy
-- [ .. ] usdcAddress
-    - [ .. ] verify accuracy
-- [ .. ] nativeOracle
-    - [ .. ] verify accuracy
-- [ .. ] nativeSymbol
-    - [ .. ] verify accuracy
-- [ .. ] oracleDecimals
-    - [ .. ] verify accuracy
+## **CONSTANTS**
+- [ .. ] **INIT_CODE_PAIR_HASH**
+    - [ .. ] verify hash
+- [ .. ] **wnativeAddress**
+    - [ .. ] verify address
+- [ .. ] **usdcAddress**
+    - [ .. ] verify address
+- [ .. ] **nativeOracle**
+    - [ .. ] verify oracle
+- [ .. ] **nativeSymbol**
+    - [ .. ] verify symbol
+- [ .. ] **oracleDecimals**
+    - [ .. ] verify decimals
 
-## Variables
-- [ .. ] isPaused
-    - [ .. ] togglePause(true)
-        - disables...
-            - [insert functions here...]
-    - [ .. ] togglePause(false)
-        - enables..
-            - [insert functions here...]
-- [ .. ] bloodSacrifice
-    - [ .. ] updateSacrifice
-        - [ .. ] verify update: bloodSacrifice
-        - [ .. ] calculate: getSacrifice()
-- [ .. ] soulDAO
-    - [ .. ] updateDAO
-        - [ .. ] verify update: soulDAO
-- [ .. ] SoulSwapFactory
-    - [ .. ] updateFactory
-        - [ .. ] verify update: SoulSwapFactory
-
-- [ .. ] totalManifestations
-    - [ .. ] verify increment: when new manifestation created  
-- [ .. ] manifestations[]
-    - [ .. ] verify indexed mAddress: when new manifestation created  
-- [ .. ] daos[]
+## **VARIABLES**
+- [ .. ] **isPaused**
+    - [ .. ] **togglePause(true**)
+        - [insert disabled functions here...]
+    - [ .. ] **togglePause(false)**
+        - [insert enabled functions here...]
+- [ .. ] **bloodSacrifice**
+    - [ .. ] **updateSacrifice**
+        - [ .. ] updates bloodSacrifice
+        - [ .. ] calculate: **getSacrifice**()
+- [ .. ] **soulDAO**
+    - [ .. ] **([ updateDAO ])**
+        - [ .. ] updates soulDAO
+- [ .. ] **SoulSwapFactory**
+    - [ .. ] **([ updateFactory ])**
+        - [ .. ] updates SoulSwapFactory
+- [ .. ] **totalManifestations**
+    - [ .. ] increments upon manifestation created  
+- [ .. ] **manifestations[]**
+    - [ .. ] checks indexed mAddress: when new manifestation created  
+- [ .. ] **daos[]**
     - [ .. ] verify indexed daoAddress: when new manifestation created  
 
-## Manifestations
-- [ .. ] createManifestation()
+## **Manifestations**
+- [ .. ] **createManifestation()**
     - [ .. ] [insert expectations...]
-- [ .. ] initializeManifestation()
+- [ .. ] **initializeManifestation()**
     - [ .. ] [insert expectations...]
-- [ .. ] launchManifestation()
+- [ .. ] **launchManifestation()**
     - [ .. ] [insert expectations...]
 
-## Modifiers
-- [ .. ] whileActive()
+## **Modifiers**
+- [ .. ] **whileActive()**
     - [ .. ] createManifestation()
 - [ .. ] exists(id)
     - [ .. ] initializeManifestation()
 
-## Getters
-- [ .. ] getUserInfo
+## **Getters**
+- [ .. ] **getUserInfo()**
+    - [ .. ] verify: expectations vs. results
