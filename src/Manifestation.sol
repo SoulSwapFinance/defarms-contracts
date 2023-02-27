@@ -12,6 +12,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public DAO;
     address public soulDAO;
     address public wnativeAddress;
+    address public usdcAddress;
     string public nativeSymbol;
 
     address public rewardAddress;
@@ -23,6 +24,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     string public override name;
     string public override symbol;
     string public override logoURI;
+    string public override assetSymbol;
     
     uint public duraDays;
     uint public feeDays;
@@ -34,6 +36,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     uint public override startTime;
     uint public override endTime;
+
+    bool public isNativePair;
 
     bool public isManifested;
     bool public isSetup;
@@ -116,15 +120,17 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // initializes: manifestation by the manifester (at creation).
     function manifest(
         address _rewardAddress,
+        address _assetAddress,
         address _depositAddress
         // address _DAO
         ) external onlyManifester {
         require(!isManifested, 'initialize once');
+        require(_assetAddress == wnativeAddress || _assetAddress == usdcAddress, 'must pair with native or stable asset');
+        isNativePair = _assetAddress == wnativeAddress;
 
         // sets: from input data.
         rewardToken = IERC20(_rewardAddress);
         depositToken = IERC20(_depositAddress);
-        // DAO = msg.sender; // _DAO;
 
         // sets: initial states.
         isManifested = true;
@@ -133,14 +139,16 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // sets: key data.
         soulDAO = manifester.soulDAO();
         wnativeAddress = manifester.wnativeAddress();
-        // nativeSymbol = manifester.nativeSymbol();
-        // assetSymbol = manifester.assetSymbol();
+        nativeSymbol = manifester.nativeSymbol();
+        
+        // sets: assetSymbol s.t. [if] isNativePair [then] "NATIVE" [else] "STABLE".
+        assetSymbol = isNativePair ? "NATIVE" : "STABLE";
 
         creatorAddress = msg.sender; // _DAO;
 
         // constructs: name that corresponds to the rewardToken.
-        name = "Manifest: RewardToken"; // string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name())); // todo: re-enable [prod]
-        symbol = "REWARD-FTM MP"; // = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', assetSymbol, ' MP')); // // todo: re-enable [prod]
+        name = string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name()));
+        symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', assetSymbol, ' MP'));
     }
     
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external {
@@ -274,7 +282,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // returns: feeAmount and with withdrawableAmount for a given amount
-    function getWithdrawable(uint deltaDays, uint amount) public view returns (uint _feeAmount, uint _withdrawable) {
+    function getWithdrawable(
+        uint deltaDays, 
+        uint amount) public view returns (uint _feeAmount, uint _withdrawable) {
         // gets: feeRate
         uint feeRate = fromWei(getFeeRate(deltaDays));
         // gets: feeAmount
@@ -286,12 +296,11 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // returns: reward period (start, end).
-    function getRewardPeriod() public view returns (uint start, uint end) {
+    function getRewardPeriod() external view returns (uint start, uint end) {
         start = startTime;
         end = endTime;
         return (start, end);
     }
-
 
     //////////////////////////////////////
         /*/ ACCOUNT (TX) FUNCTIONS /*/
@@ -311,8 +320,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // ensures: only a full payout is made, else fails.
         require(rewardToken.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
         
-        // transfers: reward toke to user.
-        rewardToken.transfer(msg.sender, pendingReward);
+        // transfers: reward token to user.
+        rewardToken.safeTransfer(msg.sender, pendingReward);
 
         // updates: reward debt (user).
         user.rewardDebt = user.amount * accRewardPerShare / 1e12;
@@ -337,7 +346,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
                 if(pendingReward > 0) { 
                     // [then] ensures: only a full payout is made, else fails.
                     require(rewardToken.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
-                    rewardToken.transfer(msg.sender, pendingReward);
+                    rewardToken.safeTransfer(msg.sender, pendingReward);
                 }
         }
 
@@ -428,7 +437,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit EmergencyWithdrawn(msg.sender, user.amount, user.withdrawTime);
     }
 
-
     ///////////////////////////////
         /*/ VIEW FUNCTIONS /*/
     ///////////////////////////////
@@ -438,7 +446,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         Users storage user = userInfo[account];
         return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
     }
-
 
     ////////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
@@ -452,11 +459,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // toggles: pause state (onlyDAO, whileSettable)
     function toggleActive(bool enabled) external onlyDAO whileSettable {
         isActivated = enabled;
-    }
-
-    // updates: LogoURI (onlyDAO, whileSettable)
-    function setLogo(string memory _logoURI) external onlyDAO whileSettable {
-        logoURI = _logoURI;
     }
 
     // updates: feeDays (onlyDAO, whileSettable) todo
@@ -503,7 +505,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         DAO = _DAO;
     }
 
-
     //////////////////////////////////////////
         /*/ SOUL (OVERRIDE) FUNCTIONS /*/
     //////////////////////////////////////////
@@ -512,7 +513,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     function toggleSettable(bool enabled) external onlySOUL {
         isSettable = enabled;
     }
-    
+
     // overrides: feeDays (onlySOUL)
     function setFeeDaysOverride(uint _feeDays) external onlySOUL {
         // gets: current fee days & ensures distinction (pool)
@@ -533,7 +534,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // overrides logoURI (onlySOUL).
-    function setLogoOverride(string memory _logoURI) external onlySOUL {
+    function setLogoURI(string memory _logoURI) external onlySOUL {
         logoURI = _logoURI;
     }
 
@@ -543,7 +544,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // updates: soulDAO adddress
         soulDAO = _soulDAO;
     }
-
 
     ///////////////////////////////
         /*/ HELPER FUNCTIONS /*/
