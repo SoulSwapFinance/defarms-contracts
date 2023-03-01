@@ -9,9 +9,11 @@
   "private": true,
   "scripts": {
     "build": "forge build",
+    "deploy": "forge script script/Manifester.s.sol:ManifesterScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
     "test": "forge test -vv",
     "test:more": "forge test -vvv",
-    "test:most": "forge test -vvvvv"
+    "test:most": "forge test -vvvvv",
+    "flatten": "forge flatten"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.1",

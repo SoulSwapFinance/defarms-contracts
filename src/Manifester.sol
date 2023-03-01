@@ -29,6 +29,7 @@ contract Manifester is IManifester {
     struct Manifestations {
         address mAddress;
         address rewardAddress;
+        address assetAddress;
         address depositAddress;
         address daoAddress;
         uint duraDays;
@@ -91,16 +92,20 @@ contract Manifester is IManifester {
 
     // creates: Manifestation
     function createManifestation(
-        address rewardAddress, 
+        address rewardAddress,
         address depositAddress,
         address daoAddress,
         uint duraDays,
         uint feeDays,
-        uint dailyReward
+        uint dailyReward,
+        bool isNative
         // address daoAddress
     ) external whileActive returns (address manifestation, uint id) {
         // creates: id reference.
         id = manifestations.length;
+
+        // sets: assetAddress.
+        address assetAddress = isNative ? wnativeAddress : usdcAddress;
 
         // ensures: depositAddress is never 0x.
         require(depositAddress != address(0), 'depositAddress must be SoulSwap LP');
@@ -128,6 +133,7 @@ contract Manifester is IManifester {
         mInfo.push(Manifestations({
             mAddress: manifestations[id],
             rewardAddress: rewardAddress,
+            assetAddress: assetAddress,
             depositAddress: depositAddress,
             daoAddress: daoAddress,
             duraDays: duraDays,
@@ -147,6 +153,7 @@ contract Manifester is IManifester {
         address mAddress = manifestations[id];
         address daoAddress = daos[id];
         address rewardAddress = manifestation.rewardAddress;
+        address assetAddress = manifestation.assetAddress;
         address depositAddress = manifestation.depositAddress;
 
         // requires: sender is the DAO
@@ -155,6 +162,7 @@ contract Manifester is IManifester {
         // creates: new manifestation based off of the inputs, then stores as an array.
         Manifestation(mAddress).manifest(
             rewardAddress,
+            assetAddress,
             depositAddress
             // daoAddress
             // address(this)
