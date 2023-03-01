@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.9;
 
-import './Manifestation.sol';
+import './MockManifestation.sol';
 
-contract Manifester is IManifester {
+contract MockManifester is IManifester {
     using SafeERC20 for IERC20;
-    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(Manifestation).creationCode));
+    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(MockManifestation).creationCode));
 
     ISoulSwapFactory public SoulSwapFactory;
     uint256 public totalManifestations;
@@ -90,7 +90,7 @@ contract Manifester is IManifester {
         oracleDecimals = _oracleDecimals;
     }
 
-    // creates: Manifestation
+    // creates: MockManifestation
     function createManifestation(
         address rewardAddress,
         address depositAddress,
@@ -113,7 +113,7 @@ contract Manifester is IManifester {
         require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
 
         // generates the creation code, salt, then assembles a create2Address for the new manifestation.
-        bytes memory bytecode = type(Manifestation).creationCode;
+        bytes memory bytecode = type(MockManifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
 
@@ -160,7 +160,7 @@ contract Manifester is IManifester {
         require(msg.sender == daoAddress, "only the DAO may initialize");
 
         // creates: new manifestation based off of the inputs, then stores as an array.
-        Manifestation(mAddress).manifest(
+        MockManifestation(mAddress).manifest(
             rewardAddress,
             assetAddress,
             depositAddress
@@ -169,7 +169,7 @@ contract Manifester is IManifester {
         );
     }
 
-    // launches: Manifestation.
+    // launches: MockManifestation.
     function launchManifestation(
         uint id,
         uint duraDays,
@@ -188,7 +188,7 @@ contract Manifester is IManifester {
         address mAddress = manifestations[id];
 
         // sets: the rewards data for the newly-created manifestation.
-        Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
+        MockManifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
     
         // checks: the creator has a sufficient balance to cover both rewards + sacrifice.
         require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
@@ -242,7 +242,7 @@ contract Manifester is IManifester {
 
         // gets: stored manifestation info by id.
         mAddress = address(manifestations[id]);
-        Manifestation m = Manifestation(mAddress);
+        MockManifestation m = MockManifestation(mAddress);
 
         daoAddress = m.DAO();
 
@@ -267,7 +267,7 @@ contract Manifester is IManifester {
     function getUserInfo(uint id, address account) external view returns (
         address mAddress, uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
         mAddress = address(manifestations[id]);
-        Manifestation manifestation = Manifestation(mAddress);
+        MockManifestation manifestation = MockManifestation(mAddress);
         (amount, rewardDebt, withdrawTime, depositTime, timeDelta, deltaDays) = manifestation.getUserInfo(account);
     }
 
