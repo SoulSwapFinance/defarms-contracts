@@ -92,8 +92,8 @@ contract Manifester is IManifester {
 
     // creates: Manifestation
     function createManifestation(
-        address rewardAddress,
         address depositAddress,
+        address rewardAddress,
         address daoAddress,
         uint duraDays,
         uint feeDays,
@@ -161,11 +161,10 @@ contract Manifester is IManifester {
 
         // creates: new manifestation based off of the inputs, then stores as an array.
         Manifestation(mAddress).manifest(
-            rewardAddress,
-            assetAddress,
-            depositAddress
-            // daoAddress
-            // address(this)
+        daoAddress,
+        assetAddress,
+        depositAddress,
+        rewardAddress
         );
     }
 

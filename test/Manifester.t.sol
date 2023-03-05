@@ -5,19 +5,8 @@ import "./setup/c.t.sol";
 import { DSTest } from "src/forge/DSTest.sol";
 
 contract ManifesterTest is Test, c {
-    
-    address public FACTORY_ADDRESS;
 
-    address public REWARD_ADDRESS;
-    address public DEPOSIT_ADDRESS;
-
-    address public WNATIVE_ADDRESS;
-    address public USDC_ADDRESS;
-    address public MANIFESTER_ADDRESS;
-    address public NATIVE_PAIR_ADDRESS;
-    address public STABLE_PAIR_ADDRESS;
-
-    function deployContracts() public virtual {
+function deployContracts() public virtual {
 
         // deploys: Mock Factory
         c.factory = new MockFactory();
@@ -44,11 +33,11 @@ contract ManifesterTest is Test, c {
         );
 
         // deploys: Deposit Token
-        c.depositToken = new MockToken(
-            "DepositToken",
-            "DEPOSIT",
-            c.initialSupply                     // totalSupply
-        );
+        // c.depositToken = new MockToken(
+        //     "DepositToken",
+        //     "DEPOSIT",
+        //     c.initialSupply                     // totalSupply
+        // );
 
         c.nativePair = new MockPair(
             address(c.factory),                 // factoryAddress
@@ -67,14 +56,15 @@ contract ManifesterTest is Test, c {
         );
 
         // sets: constants
-        FACTORY_ADDRESS = address(c.factory);
-        WNATIVE_ADDRESS = address(c.wnativeToken);
-        USDC_ADDRESS = address(c.usdcToken);
-        NATIVE_PAIR_ADDRESS = address(c.nativePair);
-        STABLE_PAIR_ADDRESS = address(c.stablePair);
-        REWARD_ADDRESS = address(c.rewardToken);
+        c.FACTORY_ADDRESS = address(c.factory);
+        c.WNATIVE_ADDRESS = address(c.wnativeToken);
+        c.USDC_ADDRESS = address(c.usdcToken);
+        c.NATIVE_PAIR_ADDRESS = address(c.nativePair);
+        c.STABLE_PAIR_ADDRESS = address(c.stablePair);
+        c.REWARD_ADDRESS = address(c.rewardToken);
+
         // sets: deposit address as the native pair address.
-        DEPOSIT_ADDRESS = address(c.nativePair); 
+        c.DEPOSIT_ADDRESS = address(c.nativePair); 
 
         // deploys: Manifester Contract
         c.manifester = new Manifester(
@@ -86,23 +76,41 @@ contract ManifesterTest is Test, c {
             c.wnativeToken.symbol()
         );
 
-        MANIFESTER_ADDRESS = address(c.manifester);
+        c.MANIFESTER_ADDRESS = address(c.manifester);
     }
-
     // creates: New Manifestation
     function createManifestation() public {
         deployContracts();
 
         c.manifester.createManifestation(
-            REWARD_ADDRESS,       // address rewardAddress, 
             DEPOSIT_ADDRESS,      // address depositAddress,
+            REWARD_ADDRESS,       // address rewardAddress, 
             c.daoAddress,         // address daoAddress,
             c.duraDays,           // uint duraDays, 
             c.feeDays,            // uint feeDays, 
             c.dailyReward,        // uint dailyReward
             true                  // bool isNative
         );
+
+        address mAddress = c.manifester.manifestations(0);
+        c.manifestation = Manifestation(mAddress);
     }
+
+    // function testInfo() public {
+    //     createManifestation();
+    //     uint id = 0;
+    //     // gets: associated variables by id.
+    //     address mAddress = c.manifester.manifestations[id];
+    //     address daoAddress = c.manifester.daos[id];
+    //     address rewardAddress = c.manifester.mInfo[id].rewardAddress;
+    //     address assetAddress = c.manifester.mInfo[id].manifestation.assetAddress;
+    //     address depositAddress = manifestation.depositAddress;
+    //     console.log("mAddress: %s", mAddress);
+    //     console.log("daoAddress: %s", daoAddress);
+    //     console.log("rewardAddress: %s", rewardAddress);
+    //     console.log("assetAddress: %s", assetAddress);
+    //     console.log("depositAddress: %s", depositAddress);
+    // }
 
     /*/ CONTRACT TESTS /*/
     // 1 // Create Manifestation
@@ -129,19 +137,19 @@ contract ManifesterTest is Test, c {
         c.manifester.initializeManifestation(id);
 
         address mAddress = c.manifester.manifestations(id);
+        // address m_rewardAddress = c.manifestation.rewardAddress();
         address rewardAddress = address(c.rewardToken);
-        address depositAddress = address(c.depositToken);
+        address depositAddress = address(c.nativePair);
+        address assetAddress = address(c.wnativeToken);
 
-        (address _mAddress,,,,,,,)         = c.manifester.mInfo(id);
-        (,address _rewardAddress,,,,,,)         = c.manifester.mInfo(id);
-        // (,,address _assetAddress,,,,,)         = c.manifester.mInfo(id);
-        (,,,address _depositAddress,,,,)         = c.manifester.mInfo(id);
-        (,,,,address _daoAddress,,,)         = c.manifester.mInfo(id);
-        (,,,,,uint _duraDays,,)         = c.manifester.mInfo(id);
-        (,,,,,,uint _feeDays,)         = c.manifester.mInfo(id);
-        (,,,,,,,uint _dailyReward)         = c.manifester.mInfo(id);
-
-        // uint _duraDays = _endTime - _startTime / c.oneDay;
+        (       address _mAddress       ,,,,,,,)    = c.manifester.mInfo(id);
+        (,      address _rewardAddress  ,,,,,,)     = c.manifester.mInfo(id);
+        (,,     address _assetAddress   ,,,,,)      = c.manifester.mInfo(id);
+        (,,,    address _depositAddress ,,,,)       = c.manifester.mInfo(id);
+        (,,,,   address _daoAddress     ,,,)        = c.manifester.mInfo(id);
+        (,,,,,  uint _duraDays          ,,)         = c.manifester.mInfo(id);
+        (,,,,,, uint _feeDays           ,)          = c.manifester.mInfo(id);
+        (,,,,,,,uint _dailyReward       )           = c.manifester.mInfo(id);
 
         // verifies: mAddress
         assertEq(_mAddress, mAddress, "ok");
@@ -150,6 +158,11 @@ contract ManifesterTest is Test, c {
         // verifies: rewardAddress
         assertEq(_rewardAddress, rewardAddress, "ok");
         console.log("[+] rewardAddress: %s", rewardAddress);
+        // console.log("[+] m_rewardAddress: %s ", m_rewardAddress);
+
+        // verifies: rewardAddress
+        assertEq(_assetAddress, assetAddress, "ok");
+        console.log("[+] assetAddress: %s", assetAddress);
 
         // verifies: depositAddress
         assertEq(_depositAddress, depositAddress, "ok");

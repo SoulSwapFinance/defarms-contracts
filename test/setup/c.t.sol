@@ -24,6 +24,16 @@ contract c is Test {
     MockFactory public factory;
     Utilities internal utils;
 
+    // addresses //
+    address public FACTORY_ADDRESS;
+    address public REWARD_ADDRESS;
+    address public DEPOSIT_ADDRESS;
+    address public WNATIVE_ADDRESS;
+    address public USDC_ADDRESS;
+    address public MANIFESTER_ADDRESS;
+    address public NATIVE_PAIR_ADDRESS;
+    address public STABLE_PAIR_ADDRESS;
+
     // constants //
     uint public oracleDecimals = 8;
     uint public duraDays = 90;

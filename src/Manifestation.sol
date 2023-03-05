@@ -15,10 +15,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public usdcAddress;
     string public nativeSymbol;
 
-    address public rewardAddress;
+    address public assetAddress;
     address public depositAddress;
+    address public rewardAddress;
 
     IERC20 public depositToken;
+    IERC20 public assetToken;
     IERC20 public rewardToken;
 
     string public override name;
@@ -119,18 +121,28 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // initializes: manifestation by the manifester (at creation).
     function manifest(
-        address _rewardAddress,
+        address _creatorAddress,
         address _assetAddress,
-        address _depositAddress
-        // address _DAO
+        address _depositAddress,
+        address _rewardAddress
         ) external onlyManifester {
         require(!isManifested, 'initialize once');
-        require(_assetAddress == wnativeAddress || _assetAddress == usdcAddress, 'must pair with native or stable asset');
-        isNativePair = _assetAddress == wnativeAddress;
+        // sets: wnative and usdc address using manifester as ref.
+        wnativeAddress = manifester.wnativeAddress();
+        usdcAddress = manifester.usdcAddress();
+
+        creatorAddress = _creatorAddress;
+        assetAddress = _assetAddress;
+        depositAddress = _depositAddress;
+        rewardAddress = _rewardAddress;
+
+        require(assetAddress == wnativeAddress || assetAddress == usdcAddress, 'must pair with native or stable asset');
+        isNativePair = assetAddress == wnativeAddress;
 
         // sets: from input data.
-        rewardToken = IERC20(_rewardAddress);
-        depositToken = IERC20(_depositAddress);
+        assetToken = IERC20(assetAddress);
+        depositToken = IERC20(depositAddress);
+        rewardToken = IERC20(rewardAddress);
 
         // sets: initial states.
         isManifested = true;
@@ -143,8 +155,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         
         // sets: assetSymbol s.t. [if] isNativePair [then] "NATIVE" [else] "STABLE".
         assetSymbol = isNativePair ? "NATIVE" : "STABLE";
-
-        creatorAddress = msg.sender; // _DAO;
 
         // constructs: name that corresponds to the rewardToken.
         name = string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name()));
