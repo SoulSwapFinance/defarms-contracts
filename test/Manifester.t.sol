@@ -5,8 +5,8 @@ import "./setup/Setup.t.sol";
 
 contract ManifesterTest is Test, Setup {
 
-    function _addEnchanter(address account, string memory proof) internal {
-        manifester.addEnchanter(account, proof);
+    function _addEnchanter(address account) internal {
+        manifester.addEnchanter(account);
     }
 
     /*/ CONTRACT TESTS /*/
@@ -91,8 +91,8 @@ contract ManifesterTest is Test, Setup {
     // [enchanters] tests: Enchanter Address Accuracy
     function testEnchanters() public {
         address _enchanterAddress = address(this);
-        _addEnchanter(_enchanterAddress, 'test');
-        (address enchanterAddress,,) = manifester.eInfo(1);
+        _addEnchanter(_enchanterAddress);
+        (address enchanterAddress,) = manifester.eInfo(1);
         assertEq(enchanterAddress, _enchanterAddress);
     }
 

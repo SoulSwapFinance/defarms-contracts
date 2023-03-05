@@ -12,19 +12,18 @@ contract Manifester is IManifester {
     uint public totalEnchanters;
     uint public eShare;
 
-    // enchanters are those who have been approved to be official referrers.
+    // approved enchanters.
     struct Enchanters {
         address account;
-        string voteHash;
         bool isActive;
     }
 
-    // whitelist info
+    // enchanters info.
     Enchanters[] public eInfo;
 
     address[] public manifestations;
     address[] public daos;
-    address[] public whitelist;
+    mapping(address => bool) public enchanted; // checks whether already an enchanter
 
     address public override soulDAO;
 
@@ -63,10 +62,11 @@ contract Manifester is IManifester {
         address manifestation
     );
 
-    event Paused(bool enabled, address msgSender);
-    event Enchanted(uint id, address account, string voteHash, bool isActive);
-    event UpdatedSacrifice(address msgSender);
-    event UpdatedDAO(address msgSender);
+    event Paused(bool enabled);
+    event Enchanted(uint id, address account, bool isActive);
+    event UpdatedSacrifice(uint sacrifice);
+    event UpdatedEnchantShare(uint eShare);
+    event UpdatedDAO(address dao);
 
     // proxy for pausing contract.
     modifier whileActive {
@@ -106,15 +106,14 @@ contract Manifester is IManifester {
         // creates: Enchantress as the first Enchanter.
         eInfo.push(Enchanters({
             account: 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8,
-            voteHash: '0xBuns.com',
             isActive: true
         }));
 
-        // increments: totalEnchanters.
+        // increments [+]: totalEnchanters.
         totalEnchanters ++;
     }
 
-    // creates: Manifestation
+    // [..] creates: Manifestation
     function createManifestation(
         address depositAddress,
         address rewardAddress,
@@ -168,7 +167,7 @@ contract Manifester is IManifester {
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
 
-    // initializes: manifestation
+    // [..] initializes: manifestation
     function initializeManifestation(uint id) external exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
@@ -192,7 +191,7 @@ contract Manifester is IManifester {
         );
     }
 
-    // launches: Manifestation.
+    // [..] launches: Manifestation.
     function launchManifestation(
         uint id,
         uint duraDays,
@@ -250,30 +249,31 @@ contract Manifester is IManifester {
         /*/ VIEW FUNCTIONS /*/
     //////////////////////////////
 
-    // returns: native price.
+    // [..] returns: native price.
     function getNativePrice() public view override returns (int) {
         int latestAnswer = IOracle(nativeOracle).latestAnswer();
         return latestAnswer;
     }
-   
+
+    // [..] returns: sacrificial split between DAO & enchanter.
     function getSplit(uint sacrifice) public view returns (uint toDAO, uint toEnchanter) {
         toEnchanter = sacrifice * eShare;
         toDAO = sacrifice - toEnchanter;
     }
 
-    // returns: total rewards.
+    // [..] returns: total rewards.
     function getTotalRewards(uint duraDays, uint dailyReward) public pure returns (uint) {
         uint totalRewards = duraDays * toWei(dailyReward);
         return totalRewards;
     }
 
-    // returns: sacrifice amount.
+    // [..] returns: sacrifice amount.
     function getSacrifice(uint _rewards) public view returns (uint) {
         uint sacrifice = (_rewards * bloodSacrifice) / 100;
         return sacrifice;
     }
 
-    // returns: info for a given id.
+    // [..] returns: info for a given id.
     function getInfo(uint id) external view returns (
         address mAddress,
         address daoAddress,
@@ -315,7 +315,7 @@ contract Manifester is IManifester {
         feeDays = m.feeDays();
     }
 
-    // returns: user info for a given id.
+    // [..] returns: user info for a given id.
     function getUserInfo(uint id, address account) external view returns (
         address mAddress, uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
         mAddress = address(manifestations[id]);
@@ -326,21 +326,24 @@ contract Manifester is IManifester {
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
-
-    function addEnchanter(address _account, string calldata _voteHash) external onlySOUL {        
+    // [..] adds: Enchanter (instance).
+    function addEnchanter(address _account) external onlySOUL {     
+        require(!enchanted[_account], "already an enchanter");
         // appends and populates: a new Enchanter struct (instance).
         eInfo.push(Enchanters({
             account: _account,        // address account;
-            voteHash: _voteHash,      // string voteHash;
             isActive: true            // bool isActive;
         }));
 
         uint id = mInfo.length;
+        // adds: account to enchanted array.
+        enchanted[_account] = true;
+
         totalEnchanters ++;
 
-        emit Enchanted(id, _account, _voteHash, true);
+        emit Enchanted(id, _account, true);
     }
-
+    // [..] updates: Enchanter status.
     function updateEnchanter(uint id, bool isActive) external onlySOUL exists(id, totalEnchanters) {
         // gets: stored data for enchanter.
         Enchanters storage enchanter = eInfo[id];
@@ -348,30 +351,39 @@ contract Manifester is IManifester {
         enchanter.isActive = isActive;
     }
 
+    // [..] updates: factory address.
     function updateFactory(address _factoryAddress) external onlySOUL {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
     }
 
+    // [..] updates: soulDAO address.
     function updateDAO(address _soulDAO) external onlySOUL {
         soulDAO = _soulDAO;
 
-        emit UpdatedDAO(msg.sender);
+        emit UpdatedDAO(_soulDAO);
     }
 
+    // [..] updates: eShare amount.
     function updateEnchantShare(uint _share) external onlySOUL {
-        eShare = _share;
+        require(_share <= 100, 'cannot exceed 100%.');
+        eShare = toWei(_share);
+
+        emit UpdatedEnchantShare(_share);
     }
 
+    // [..] updates: sacrifice amount.
     function updateSacrifice(uint _sacrifice) external onlySOUL {
+        require(_sacrifice <= 100, 'cannot exceed 100%.');
         bloodSacrifice = toWei(_sacrifice);
 
-        emit UpdatedSacrifice(msg.sender);
+        emit UpdatedSacrifice(_sacrifice);
     }
 
+    // [..] updates: pause state.
     function togglePause(bool enabled) external onlySOUL {
         isPaused = enabled;
 
-        emit Paused(enabled, msg.sender);
+        emit Paused(enabled);
     }
 
 
