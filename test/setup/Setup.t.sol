@@ -113,8 +113,7 @@ contract Setup is Test {
         );
         MANIFESTER_ADDRESS = address(manifester);
 
-            // creates: New Manifestation
-    // function createManifestation() public {
+        // creates: Manifestation[0]
         manifester.createManifestation(
             DEPOSIT_ADDRESS,      // address depositAddress,
             REWARD_ADDRESS,       // address rewardAddress, 
@@ -124,6 +123,9 @@ contract Setup is Test {
 
         MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
         manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
+
+        // initializes: Manifestation[0]
+        manifester.initializeManifestation(0);
 
     }
 }

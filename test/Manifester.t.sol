@@ -4,29 +4,17 @@ pragma solidity >=0.8.13;
 import "./setup/Setup.t.sol";
 
 contract ManifesterTest is Test, Setup {
-    // Manifester manifester = Setup.manifester;
-    // MockToken wnativeToken = Setup.wnativeToken;
-    // MockToken rewardToken = Setup.rewardToken;
-    // MockToken depositToken = Setup.depositToken;
 
-    // MockPair nativePair = Setup.nativePair;
-    // MockPair stablePair = Setup.stablePair;
-    
-    // uint DAILY_REWARD = Setup.DAILY_REWARD;
-    // uint DURA_DAYS = Setup.DURA_DAYS;
-    // uint FEE_DAYS = Setup.FEE_DAYS;
-
-    function initializeManifestation(uint id) public virtual {
-        // createManifestation();
-        manifester.initializeManifestation(id);
+    function _addEnchanter(address account, string memory proof) internal {
+        manifester.addEnchanter(account, proof);
     }
 
     /*/ CONTRACT TESTS /*/
 
     // [mInfo]: Addresses (manifestation, dao, asset, deposit, reward)
-    function testInfo_Addresses() public virtual {
+    function testInfo() public virtual {
         uint id = 0;
-        initializeManifestation(id);
+        // initializeManifestation(id);
 
         address mAddress = manifester.manifestations(id);
         address assetAddress = address(wnativeToken);
@@ -98,6 +86,14 @@ contract ManifesterTest is Test, Setup {
         // console.log('expected: %s, actuals: %s', expected, actual);
         assertEq(actual, expected, "ok");
         // console.log("[+] getSacrifice(100K): %s", actual);
+    }
+
+    // [enchanters] tests: Enchanter Address Accuracy
+    function testEnchanters() public {
+        address _enchanterAddress = address(this);
+        _addEnchanter(_enchanterAddress, 'test');
+        (address enchanterAddress,,) = manifester.eInfo(1);
+        assertEq(enchanterAddress, _enchanterAddress);
     }
 
 }

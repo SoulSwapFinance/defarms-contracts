@@ -110,6 +110,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     event Harvested(address indexed user, uint amount, uint timestamp);
     event Deposited(address indexed user, uint amount, uint timestamp);
+    event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
+
     event Withdrawn(address indexed user, uint amount, uint feeAmount, uint timestamp);
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
     event FeeDaysUpdated(uint feeDays);
@@ -159,6 +161,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // constructs: name that corresponds to the rewardToken.
         name = string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name()));
         symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', assetSymbol, ' MP'));
+
+        emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
     
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external {
