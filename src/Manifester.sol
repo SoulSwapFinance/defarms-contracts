@@ -28,9 +28,9 @@ contract Manifester is IManifester {
 
     struct Manifestations {
         address mAddress;
-        address rewardAddress;
         address assetAddress;
         address depositAddress;
+        address rewardAddress;
         address daoAddress;
         uint duraDays;
         uint feeDays;
@@ -132,9 +132,9 @@ contract Manifester is IManifester {
         // appends and populates: a new Manifestations struct (instance).
         mInfo.push(Manifestations({
             mAddress: manifestations[id],
-            rewardAddress: rewardAddress,
             assetAddress: assetAddress,
             depositAddress: depositAddress,
+            rewardAddress: rewardAddress,
             daoAddress: daoAddress,
             duraDays: duraDays,
             feeDays: feeDays,

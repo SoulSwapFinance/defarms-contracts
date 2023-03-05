@@ -34,20 +34,81 @@ contract c is Test {
     address public NATIVE_PAIR_ADDRESS;
     address public STABLE_PAIR_ADDRESS;
 
-    // constants //
-    uint public oracleDecimals = 8;
-    uint public duraDays = 90;
-    uint public feeDays = 14;
-    uint public dailyReward = 100;
-    uint public initialSupply = 1_000_000_000;
-    uint public oneDay = 86_400;
+    // numeric constants //
+    uint public immutable ORACLE_DECIMALS = 8;
+    uint public immutable DURA_DAYS = 90;
+    uint public immutable FEE_DAYS = 14;
+    uint public immutable DAILY_REWARD = 100;
+    uint public immutable INITIAL_SUPPLY = 1_000_000_000;
+    uint public immutable ONE_DAY = 1 days;
 
     // admins //
     address payable[] internal admins;
-    address internal soulDAO; // = msg.sender;
-    address internal daoAddress = msg.sender;
+    address internal SOUL_DAO_ADDRESS; // = msg.sender;
+    address internal DAO_ADDRESS = msg.sender;
 
     // addresses //
-    address nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
+    address NATIVE_ORACLE_ADDRESS = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
 
+    // initializes tokens, pairs
+    constructor() {
+
+        // initializes: Mock Factory
+        factory = new MockFactory();
+        FACTORY_ADDRESS = address(factory);
+
+        // initializes: Native Token
+        wnativeToken = new MockToken(
+            "Wrapped Fantom",
+            "WFTM",
+            INITIAL_SUPPLY                     // totalSupply
+        );
+        WNATIVE_ADDRESS = address(wnativeToken);
+
+        // initializes: USDC Token
+        usdcToken = new MockToken(
+            "USD Coin",
+            "USDC",
+            INITIAL_SUPPLY                     // totalSupply
+        );
+        USDC_ADDRESS = address(usdcToken);
+
+        // initializes: Reward Token
+        rewardToken = new MockToken(
+            "RewardToken",
+            "REWARD",
+            INITIAL_SUPPLY                     // totalSupply
+        );
+        REWARD_ADDRESS = address(rewardToken);
+
+        nativePair = new MockPair(
+            FACTORY_ADDRESS,                  // factoryAddress
+            address(rewardToken),             // token0Address
+            address(wnativeToken),            // token1Address
+            address(wnativeToken),            // wnativeAddress
+            INITIAL_SUPPLY                    // totalSupply
+        );
+        NATIVE_PAIR_ADDRESS = address(nativePair);
+        DEPOSIT_ADDRESS = address(nativePair); 
+
+        stablePair = new MockPair(
+            FACTORY_ADDRESS,                  // factoryAddress
+            address(rewardToken),             // token0Address
+            address(usdcToken),               // token1Address
+            address(wnativeToken),            // wnativeAddress
+            INITIAL_SUPPLY                    // totalSupply
+        );
+        STABLE_PAIR_ADDRESS = address(stablePair);
+
+        // deploys: Manifester Contract
+        manifester = new Manifester(
+            FACTORY_ADDRESS,
+            USDC_ADDRESS,
+            WNATIVE_ADDRESS,
+            NATIVE_ORACLE_ADDRESS,
+            ORACLE_DECIMALS,
+            wnativeToken.symbol()
+        );
+        MANIFESTER_ADDRESS = address(manifester);
+    }
 }
