@@ -1,29 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import "./setup/c.t.sol";
+import "./setup/Setup.t.sol";
 
-contract ManifesterTest is Test, c {
+contract ManifesterTest is Test, Setup {
+    // Manifester manifester = Setup.manifester;
+    // MockToken wnativeToken = Setup.wnativeToken;
+    // MockToken rewardToken = Setup.rewardToken;
+    // MockToken depositToken = Setup.depositToken;
 
-    // creates: New Manifestation
-    function createManifestation() public {
-        c.manifester.createManifestation(
-            c.DEPOSIT_ADDRESS,      // address depositAddress,
-            c.REWARD_ADDRESS,       // address rewardAddress, 
-            c.DAO_ADDRESS,         // address daoAddress,
-            c.DURA_DAYS,           // uint duraDays, 
-            c.FEE_DAYS,            // uint feeDays, 
-            c.DAILY_REWARD,        // uint dailyReward
-            true                  // bool isNative
-        );
-
-        address mAddress = c.manifester.manifestations(0);
-        c.manifestation = Manifestation(mAddress);
-    }
+    // MockPair nativePair = Setup.nativePair;
+    // MockPair stablePair = Setup.stablePair;
+    
+    // uint DAILY_REWARD = Setup.DAILY_REWARD;
+    // uint DURA_DAYS = Setup.DURA_DAYS;
+    // uint FEE_DAYS = Setup.FEE_DAYS;
 
     function initializeManifestation(uint id) public virtual {
-        createManifestation();
-        c.manifester.initializeManifestation(id);
+        // createManifestation();
+        manifester.initializeManifestation(id);
     }
 
     /*/ CONTRACT TESTS /*/
@@ -33,21 +28,24 @@ contract ManifesterTest is Test, c {
         uint id = 0;
         initializeManifestation(id);
 
-        address mAddress = c.manifester.manifestations(id);
-        address assetAddress = address(c.wnativeToken);
-        address depositAddress = address(c.nativePair);
-        address rewardAddress = address(c.rewardToken);
+        address mAddress = manifester.manifestations(id);
+        address assetAddress = address(wnativeToken);
+        address depositAddress = address(nativePair);
+        address rewardAddress = address(rewardToken);
+        address enchanterAddress = 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8;
 
          // manifestation address //
-        (       address _mAddress       ,,,,,,,)    = c.manifester.mInfo(id);
-         // dao address //
-        (,,,,   address _daoAddress     ,,,)        = c.manifester.mInfo(id);
+        (       address _mAddress       ,,,,,)    = manifester.mInfo(id);
          // asset address //
-        (,      address _assetAddress  ,,,,,,)   = c.manifester.mInfo(id);
+        (,      address _assetAddress  ,,,,)   = manifester.mInfo(id);
         // deposit address //
-        (,,     address _depositAddress   ,,,,,)      = c.manifester.mInfo(id);
+        (,,     address _depositAddress   ,,,)      = manifester.mInfo(id);
         // reward address //
-        (,,,    address _rewardAddress ,,,,)       = c.manifester.mInfo(id);
+        (,,,    address _rewardAddress ,,)       = manifester.mInfo(id);
+        // creator address //
+        (,,,,    address _creatorAddress ,)       = manifester.mInfo(id);
+        // enchanter address //
+        (,,,,,    address _enchanterAddress)       = manifester.mInfo(id);
 
         // verifies: assetAddress
         assertEq(_assetAddress, assetAddress, "ok");
@@ -61,41 +59,23 @@ contract ManifesterTest is Test, c {
         assertEq(_rewardAddress, rewardAddress, "ok");
         // console.log("[+] rewardAddress: %s", rewardAddress);
 
-        // verifies: daoAddress
-        assertEq(_daoAddress, c.DAO_ADDRESS, "ok");
-        // console.log("[+] daoAddress: %s", c.DAO_ADDRESS);
+        // verifies: creatorAddress
+        assertEq(_creatorAddress, CREATOR_ADDRESS, "ok");
+        // console.log("[+] daoAddress: %s", DAO_ADDRESS);
 
         // verifies: mAddress
         assertEq(_mAddress, mAddress, "ok");
         // console.log("[+] mAddress: %s", mAddress);
+       
+        // verifies: enchanterAddress
+        assertEq(_enchanterAddress, enchanterAddress, "ok");
+        // console.log("[+] enchanterAddress: %s", enchanterAddress);
     }
 
-    // [mInfo]: Manifestation Info (duraDays, feeDays, dailyReward)
-    function testInfo_Constants() public virtual {
-        uint id = 0;
-        initializeManifestation(id);
-
-        (,,,,,  uint _duraDays          ,,)         = c.manifester.mInfo(id);
-        (,,,,,, uint _feeDays           ,)          = c.manifester.mInfo(id);
-        (,,,,,,,uint _dailyReward       )           = c.manifester.mInfo(id);
-
-        // verifies: duraDays
-        assertEq(_duraDays, c.DURA_DAYS, "ok");
-        // console.log("[+] duraDays: %s", c.DURA_DAYS);
-
-        // verifies: feeDays
-        assertEq(_feeDays, c.FEE_DAYS, "ok");
-        // console.log("[+] feeDays: %s", c.FEE_DAYS);
-
-        // verifies: dailyReward
-        assertEq(_dailyReward, c.DAILY_REWARD, "ok");
-        // console.log("[+] dailyReward: %s", c.DAILY_REWARD);
-    }
-
-    // [3] test: Native Pair
+    // [nativePair] test: Native Pair
     function testPairs() public {
-        bool _isNative_Native = c.nativePair.isNative();
-        bool _isNative_Stable = c.stablePair.isNative();
+        bool _isNative_Native = nativePair.isNative();
+        bool _isNative_Stable = stablePair.isNative();
         
         bool isNative_Native = true;
         bool isNative_Stable = false;
@@ -103,18 +83,18 @@ contract ManifesterTest is Test, c {
         assertEq(_isNative_Native, isNative_Native, "ok");
         assertEq(_isNative_Stable, isNative_Stable, "ok");
 
-        // console.log("[+] isNative(nativePair): %s", c.nativePair.isNative());
-        // console.log("[+] isNative(stablePair): %s", c.stablePair.isNative());
+        // console.log("[+] isNative(nativePair): %s", nativePair.isNative());
+        // console.log("[+] isNative(stablePair): %s", stablePair.isNative());
 
-        // console.log("[+] nativePair: %s", address(c.nativePair));
-        // console.log("[+] stablePair: %s", address(c.stablePair));
+        // console.log("[+] nativePair: %s", address(nativePair));
+        // console.log("[+] stablePair: %s", address(stablePair));
     }
 
-    // tests: Sacrifice Accuracy
+    // [sacrifice] tests: Sacrifice Accuracy
     function testSacrifice() public {
         uint totalRewards = 100_000;
-        uint expected = 1_000;
-        uint actual = c.manifester.getSacrifice(totalRewards) / 1E18;
+        uint expected = 2_000;
+        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
         // console.log('expected: %s, actuals: %s', expected, actual);
         assertEq(actual, expected, "ok");
         // console.log("[+] getSacrifice(100K): %s", actual);

@@ -8,10 +8,23 @@ contract Manifester is IManifester {
     bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(Manifestation).creationCode));
 
     ISoulSwapFactory public SoulSwapFactory;
-    uint256 public totalManifestations;
+    uint public totalManifestations;
+    uint public totalEnchanters;
+    uint public eShare;
+
+    // enchanters are those who have been approved to be official referrers.
+    struct Enchanters {
+        address account;
+        string voteHash;
+        bool isActive;
+    }
+
+    // whitelist info
+    Enchanters[] public eInfo;
 
     address[] public manifestations;
     address[] public daos;
+    address[] public whitelist;
 
     address public override soulDAO;
 
@@ -26,15 +39,14 @@ contract Manifester is IManifester {
     uint public bloodSacrifice;
     bool public isPaused;
 
+    // creates: Manifestations struct (strictly immutable variables).
     struct Manifestations {
         address mAddress;
         address assetAddress;
         address depositAddress;
         address rewardAddress;
-        address daoAddress;
-        uint duraDays;
-        uint feeDays;
-        uint dailyReward;
+        address creatorAddress;
+        address enchanterAddress;
     }
 
     // manifestation info
@@ -46,11 +58,13 @@ contract Manifester is IManifester {
         uint indexed id,
         address indexed depositAddress, 
         address rewardAddress, 
-        address creatorAddress, 
+        address creatorAddress,
+        address enchanterAddress,
         address manifestation
     );
 
-    event Paused(address msgSender);
+    event Paused(bool enabled, address msgSender);
+    event Enchanted(uint id, address account, string voteHash, bool isActive);
     event UpdatedSacrifice(address msgSender);
     event UpdatedDAO(address msgSender);
 
@@ -67,8 +81,8 @@ contract Manifester is IManifester {
     }
 
     // restricts: only existing manifestations.
-    modifier exists(uint id) {
-        require(id <= totalManifestations, 'manifestation (id) does not exist.');
+    modifier exists(uint id, uint total) {
+        require(id <= total, 'does not exist.');
         _;
     }
 
@@ -81,28 +95,40 @@ contract Manifester is IManifester {
         string memory _nativeSymbol
     ) {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
-        bloodSacrifice = toWei(1);
+        bloodSacrifice = toWei(2);
         nativeSymbol = _nativeSymbol;
         usdcAddress = _usdcAddress;
         wnativeAddress = _wnativeAddress;
         soulDAO = msg.sender;
         nativeOracle = IOracle(_nativeOracle);
         oracleDecimals = _oracleDecimals;
+
+        // creates: Enchantress as the first Enchanter.
+        eInfo.push(Enchanters({
+            account: 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8,
+            voteHash: '0xBuns.com',
+            isActive: true
+        }));
+
+        // increments: totalEnchanters.
+        totalEnchanters ++;
     }
 
     // creates: Manifestation
     function createManifestation(
         address depositAddress,
         address rewardAddress,
-        address daoAddress,
-        uint duraDays,
-        uint feeDays,
-        uint dailyReward,
+        uint enchanterId,
         bool isNative
         // address daoAddress
-    ) external whileActive returns (address manifestation, uint id) {
+    ) external whileActive exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
         id = manifestations.length;
+        // gets: stored enchanter info
+        Enchanters memory enchanter = eInfo[enchanterId];
+
+        // sets: enchanterAddress.
+        address enchanterAddress = enchanter.account;
 
         // sets: assetAddress.
         address assetAddress = isNative ? wnativeAddress : usdcAddress;
@@ -112,7 +138,7 @@ contract Manifester is IManifester {
         // ensures: unique depositAddress-id mapping.
         require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
 
-        // generates the creation code, salt, then assembles a create2Address for the new manifestation.
+        // generates: creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
@@ -135,17 +161,15 @@ contract Manifester is IManifester {
             assetAddress: assetAddress,
             depositAddress: depositAddress,
             rewardAddress: rewardAddress,
-            daoAddress: daoAddress,
-            duraDays: duraDays,
-            feeDays: feeDays,
-            dailyReward: dailyReward
+            creatorAddress: msg.sender,
+            enchanterAddress: enchanterAddress
         }));
 
-        emit SummonedManifestation(id, depositAddress, rewardAddress, daoAddress, manifestation);
+        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
 
     // initializes: manifestation
-    function initializeManifestation(uint id) external exists(id) {
+    function initializeManifestation(uint id) external exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
 
@@ -157,14 +181,14 @@ contract Manifester is IManifester {
         address depositAddress = manifestation.depositAddress;
 
         // requires: sender is the DAO
-        require(msg.sender == daoAddress, "only the DAO may initialize");
+        require(msg.sender == daoAddress, 'only the DAO may initialize');
 
         // creates: new manifestation based off of the inputs, then stores as an array.
         Manifestation(mAddress).manifest(
-        daoAddress,
-        assetAddress,
-        depositAddress,
-        rewardAddress
+            daoAddress,
+            assetAddress,
+            depositAddress,
+            rewardAddress
         );
     }
 
@@ -174,29 +198,52 @@ contract Manifester is IManifester {
         uint duraDays,
         uint dailyReward,
         uint feeDays
-    ) external exists(id) {
+    ) external exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
-        require(msg.sender == manifestation.daoAddress, 'only the DAO may launch');
 
+        // checks: the sender is the creator of the manifestation.
+        require(msg.sender == manifestation.creatorAddress, 'only the creator may launch.');
+
+        // gets: distribution amounts.
         uint reward = getTotalRewards(duraDays, dailyReward);
+
+        require(_launchManifestation(id, duraDays, feeDays, dailyReward, reward), 'launch failed.');
+    }
+
+    function _launchManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward, uint reward) internal returns (bool) {
+        // gets: stored enchanters info by id.
+        Enchanters storage enchanter = eInfo[id];
+        address eAddress = enchanter.account;
+
+        // gets: stored manifestation info by id.
+        Manifestations storage manifestation = mInfo[id];
+
         uint sacrifice = getSacrifice(fromWei(reward));
-        uint total = reward + sacrifice;
+
+        (uint toDAO, uint toEnchanter) = getSplit(sacrifice);
 
         address rewardAddress = manifestation.rewardAddress;
         address mAddress = manifestations[id];
+
+        uint total = getTotalRewards(duraDays, dailyReward) + sacrifice;
 
         // sets: the rewards data for the newly-created manifestation.
         Manifestation(mAddress).setRewards(duraDays, feeDays, dailyReward);
     
         // checks: the creator has a sufficient balance to cover both rewards + sacrifice.
-        require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation');
+        require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation.');
 
-        // transfers: sacrifice directly to soulDAO.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, sacrifice);
+        // transfers: eShare directly to enchanter.
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, eAddress, toEnchanter);
+        
+        // transfers: share directly to soulDAO.
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, toDAO);
         
         // transfers: `totalRewards` to the manifestation contract.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, reward);
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, total);
+
+        return true;
     }
 
     //////////////////////////////
@@ -207,6 +254,11 @@ contract Manifester is IManifester {
     function getNativePrice() public view override returns (int) {
         int latestAnswer = IOracle(nativeOracle).latestAnswer();
         return latestAnswer;
+    }
+   
+    function getSplit(uint sacrifice) public view returns (uint toDAO, uint toEnchanter) {
+        toEnchanter = sacrifice * eShare;
+        toDAO = sacrifice - toEnchanter;
     }
 
     // returns: total rewards.
@@ -275,6 +327,27 @@ contract Manifester is IManifester {
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
 
+    function addEnchanter(address _account, string calldata _voteHash) external onlySOUL {        
+        // appends and populates: a new Enchanter struct (instance).
+        eInfo.push(Enchanters({
+            account: _account,        // address account;
+            voteHash: _voteHash,      // string voteHash;
+            isActive: true            // bool isActive;
+        }));
+
+        uint id = mInfo.length;
+        totalEnchanters ++;
+
+        emit Enchanted(id, _account, _voteHash, true);
+    }
+
+    function updateEnchanter(uint id, bool isActive) external onlySOUL exists(id, totalEnchanters) {
+        // gets: stored data for enchanter.
+        Enchanters storage enchanter = eInfo[id];
+        // updates: isActive status.
+        enchanter.isActive = isActive;
+    }
+
     function updateFactory(address _factoryAddress) external onlySOUL {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
     }
@@ -283,6 +356,10 @@ contract Manifester is IManifester {
         soulDAO = _soulDAO;
 
         emit UpdatedDAO(msg.sender);
+    }
+
+    function updateEnchantShare(uint _share) external onlySOUL {
+        eShare = _share;
     }
 
     function updateSacrifice(uint _sacrifice) external onlySOUL {
@@ -294,7 +371,7 @@ contract Manifester is IManifester {
     function togglePause(bool enabled) external onlySOUL {
         isPaused = enabled;
 
-        emit Paused(msg.sender);
+        emit Paused(enabled, msg.sender);
     }
 
 
