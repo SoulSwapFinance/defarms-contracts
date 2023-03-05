@@ -2,7 +2,7 @@
 pragma solidity >=0.6.0 <0.9.0;
 
 import "./Vm.sol";
-import "ds-test/test.sol";
+import "src/forge/DSTest.sol";
 import "./console.sol";
 
 // Wrappers around Cheatcodes to avoid footguns

@@ -238,7 +238,8 @@ contract Manifester is IManifester {
         uint startTime,
         uint endTime,
         uint dailyReward, 
-        uint feeDays) {
+        uint feeDays
+        ) {
 
         // gets: stored manifestation info by id.
         mAddress = address(manifestations[id]);

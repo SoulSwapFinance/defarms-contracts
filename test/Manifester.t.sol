@@ -2,8 +2,20 @@
 pragma solidity >=0.8.13;
 
 import "./setup/c.t.sol";
+import { DSTest } from "src/forge/DSTest.sol";
 
 contract ManifesterTest is Test, c {
+    
+    address public FACTORY_ADDRESS;
+
+    address public REWARD_ADDRESS;
+    address public DEPOSIT_ADDRESS;
+
+    address public WNATIVE_ADDRESS;
+    address public USDC_ADDRESS;
+    address public MANIFESTER_ADDRESS;
+    address public NATIVE_PAIR_ADDRESS;
+    address public STABLE_PAIR_ADDRESS;
 
     function deployContracts() public virtual {
 
@@ -54,15 +66,27 @@ contract ManifesterTest is Test, c {
             c.initialSupply                     // totalSupply
         );
 
+        // sets: constants
+        FACTORY_ADDRESS = address(c.factory);
+        WNATIVE_ADDRESS = address(c.wnativeToken);
+        USDC_ADDRESS = address(c.usdcToken);
+        NATIVE_PAIR_ADDRESS = address(c.nativePair);
+        STABLE_PAIR_ADDRESS = address(c.stablePair);
+        REWARD_ADDRESS = address(c.rewardToken);
+        // sets: deposit address as the native pair address.
+        DEPOSIT_ADDRESS = address(c.nativePair); 
+
         // deploys: Manifester Contract
         c.manifester = new Manifester(
-            address(c.factory),
-            address(c.usdcToken),
-            address(c.wnativeToken),
+            FACTORY_ADDRESS,
+            USDC_ADDRESS,
+            WNATIVE_ADDRESS,
             c.nativeOracle,
             c.oracleDecimals,
             c.wnativeToken.symbol()
         );
+
+        MANIFESTER_ADDRESS = address(c.manifester);
     }
 
     // creates: New Manifestation
@@ -70,12 +94,13 @@ contract ManifesterTest is Test, c {
         deployContracts();
 
         c.manifester.createManifestation(
-            address(c.rewardToken),       // address rewardAddress, 
-            address(c.depositToken),      // address depositAddress,
-            c.daoAddress,                 // address daoAddress,
-            c.duraDays,                   // uint duraDays, 
-            c.feeDays,                    // uint feeDays, 
-            c.dailyReward                 // uint dailyReward
+            REWARD_ADDRESS,       // address rewardAddress, 
+            DEPOSIT_ADDRESS,      // address depositAddress,
+            c.daoAddress,         // address daoAddress,
+            c.duraDays,           // uint duraDays, 
+            c.feeDays,            // uint feeDays, 
+            c.dailyReward,        // uint dailyReward
+            true                  // bool isNative
         );
     }
 
@@ -107,13 +132,16 @@ contract ManifesterTest is Test, c {
         address rewardAddress = address(c.rewardToken);
         address depositAddress = address(c.depositToken);
 
-        (address _mAddress, , , , , ,)         = c.manifester.mInfo(id);
-        (,address _rewardAddress, , , , ,)     = c.manifester.mInfo(id);
-        (, ,address _depositAddress, , , ,)    = c.manifester.mInfo(id);
-        (, , ,address _daoAddress, , ,)        = c.manifester.mInfo(id);
-        (, , , ,uint _duraDays, ,)             = c.manifester.mInfo(id);
-        (, , , , ,uint _feeDays,)              = c.manifester.mInfo(id);
-        (, , , , , ,uint _dailyReward)         = c.manifester.mInfo(id);
+        (address _mAddress,,,,,,,)         = c.manifester.mInfo(id);
+        (,address _rewardAddress,,,,,,)         = c.manifester.mInfo(id);
+        // (,,address _assetAddress,,,,,)         = c.manifester.mInfo(id);
+        (,,,address _depositAddress,,,,)         = c.manifester.mInfo(id);
+        (,,,,address _daoAddress,,,)         = c.manifester.mInfo(id);
+        (,,,,,uint _duraDays,,)         = c.manifester.mInfo(id);
+        (,,,,,,uint _feeDays,)         = c.manifester.mInfo(id);
+        (,,,,,,,uint _dailyReward)         = c.manifester.mInfo(id);
+
+        // uint _duraDays = _endTime - _startTime / c.oneDay;
 
         // verifies: mAddress
         assertEq(_mAddress, mAddress, "ok");

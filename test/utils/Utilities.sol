@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import { DSTest } from "./Test.sol";
-import { Vm } from "forge-std/Vm.sol";
+import { Vm } from "src/forge/Vm.sol";
 
 //common utilities for forge tests
 contract Utilities is DSTest {

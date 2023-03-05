@@ -30,6 +30,7 @@ contract c is Test {
     uint public feeDays = 14;
     uint public dailyReward = 100;
     uint public initialSupply = 1_000_000_000;
+    uint public oneDay = 86_400;
 
     // admins //
     address payable[] internal admins;
