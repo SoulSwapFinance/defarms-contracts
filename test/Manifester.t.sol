@@ -2,7 +2,6 @@
 pragma solidity >=0.8.13;
 
 import "./setup/c.t.sol";
-import { DSTest } from "src/forge/DSTest.sol";
 
 contract ManifesterTest is Test, c {
 
@@ -28,12 +27,8 @@ contract ManifesterTest is Test, c {
     }
 
     /*/ CONTRACT TESTS /*/
-    // 1 // mInfo: 
-    // 3 // Native Pair
-    // 4 // Stable Pair
-    // 5 // Calculate Sacrifice
 
-    // [mInfo]: Manifestation Info (manifestatin, dao)
+    // [mInfo]: Addresses (manifestation, dao, asset, deposit, reward)
     function testInfo_Addresses() public virtual {
         uint id = 0;
         initializeManifestation(id);
@@ -75,7 +70,7 @@ contract ManifesterTest is Test, c {
         // console.log("[+] mAddress: %s", mAddress);
     }
 
-    // [mInfo]: Manifestation Info (constants)
+    // [mInfo]: Manifestation Info (duraDays, feeDays, dailyReward)
     function testInfo_Constants() public virtual {
         uint id = 0;
         initializeManifestation(id);
@@ -99,9 +94,6 @@ contract ManifesterTest is Test, c {
 
     // [3] test: Native Pair
     function testPairs() public {
-        // bool isNative = true;
-        // bool _isNative = c.nativePair.isNative();
-
         bool _isNative_Native = c.nativePair.isNative();
         bool _isNative_Stable = c.stablePair.isNative();
         
