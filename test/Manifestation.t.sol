@@ -46,5 +46,4 @@ contract ManifestationTest is Test, Setup {
         assertEq(logoURI, _logoURI);
         assertEq(assetSymbol, _assetSymbol);
     }
-
 }
