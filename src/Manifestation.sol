@@ -84,25 +84,25 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
-    // proxy for setting contract.
+    // [..] proxy for setting contract.
     modifier whileSettable {
         require(isSettable, 'contract is currently not settable');
         _;
     }
 
-    // designates: soul access (for (rare) overrides).
+    // [..] designates: soul access (for (rare) overrides).
     modifier onlySOUL() {
         require(soulDAO == msg.sender, "onlySOUL: caller is not the soulDAO address");
         _;
     }
 
-    // ensures: only the DAO address is the sender.
+    // [..] ensures: only the DAO address is the sender.
     modifier onlyDAO() {
         require(DAO == msg.sender, "onlyDAO: caller is not the DAO address");
         _;
     }
 
-    // ensures: only the Manifester address is the sender.
+    // [..] ensures: only the Manifester address is the sender.
     modifier onlyManifester() {
         require(address(manifester) == msg.sender, "onlyManifester: caller is not the Manifester address");
         _;
@@ -116,12 +116,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
     event FeeDaysUpdated(uint feeDays);
 
-    // sets the manifester at creation //
+    // [..] sets the manifester at creation //
     constructor() {
         manifester = IManifester(msg.sender);
     }
 
-    // initializes: manifestation by the manifester (at creation).
+    // [..] initializes: manifestation by the manifester (at creation).
     function manifest(
         address _creatorAddress,
         address _assetAddress,
@@ -180,7 +180,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSetup = true;
     }
 
-    // updates: rewards, so that they are accounted for.
+    // [..] updates: rewards, so that they are accounted for.
     function update() public {
 
         if (block.timestamp <= lastRewardTime) { return; }
@@ -201,7 +201,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ VIEW FUNCTIONS /*/
     ///////////////////////////////
 
-    // returns: pending rewards for a specifed account.
+    // [..] returns: pending rewards for a specifed account.
     function getPendingRewards(address account) external view returns (uint pendingAmount) {
         // gets: pool and user data
         Users storage user = userInfo[account];
@@ -226,41 +226,51 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return pendingAmount;
     }
 
-    // returns: multiplier during a period.
+    // [..] returns: multiplier during a period.
     function getMultiplier(uint from, uint to) public pure returns (uint multiplier) {
         multiplier = to - from;
 
         return multiplier;
     }
 
-    // returns: price per token
+    // [..] returns: price per token
     function getPricePerToken() public view returns (uint pricePerToken) {
-        uint nativePriceUSD = uint(IManifester(manifester).getNativePrice());
         IERC20 WNATIVE = IERC20(wnativeAddress);
-        uint wnativeBalance = WNATIVE.balanceOf(address(depositToken));
+        IERC20 USDC = IERC20(usdcAddress);
+    
         uint totalSupply = depositToken.totalSupply();
-        uint nativeValue = wnativeBalance * nativePriceUSD;
-        pricePerToken = nativeValue * 2 / totalSupply;
+
+        uint assetPrice = 
+            isNativePair ? uint(IManifester(manifester).getNativePrice()) 
+                : 1 * 1E8;
+
+        uint assetBalance = 
+            isNativePair ? WNATIVE.balanceOf(address(depositToken)) 
+                : USDC.balanceOf(address(depositToken));
+
+        uint assetValue = assetBalance * assetPrice;
+        pricePerToken = assetValue * 2 / totalSupply;
 
         return pricePerToken;
     }
 
-    // returns: TVL
+    // [..] returns: TVL
     function getTVL() external view override returns (uint tvl) {
         uint pricePerToken = getPricePerToken();
         uint totalDeposited = getTotalDeposit();
         tvl = totalDeposited * pricePerToken;
-        
+
         return tvl;
     }
 
-    // returns: the total amount of deposited tokens.
+    // [..] returns: the total amount of deposited tokens.
     function getTotalDeposit() public view override returns (uint totalDeposited) {
         totalDeposited = depositToken.balanceOf(address(this));
+
         return totalDeposited;
     }
 
-    // returns: user delta is the time since user either last withdrew OR first deposited OR 0.
+    // [..] returns: user delta is the time since user either last withdrew OR first deposited OR 0.
 	function getUserDelta(address account) public view returns (uint timeDelta) {
         // gets: stored `user` data.
         Users storage user = userInfo[account];
@@ -273,13 +283,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
                 else return timeDelta = 0;
 	}
 
-    // gets: days based off a given timeDelta (seconds).
+    // [..] gets: days based off a given timeDelta (seconds).
     function getDeltaDays(uint timeDelta) public pure returns (uint deltaDays) {
         deltaDays = timeDelta < 1 days ? 0 : timeDelta / 1 days;
         return deltaDays;     
     }
 
-     // returns: feeRate and timeDelta.
+     // [..] returns: feeRate and timeDelta.
     function getFeeRate(uint deltaDays) public view returns (uint feeRate) {
         // calculates: rateDecayed (converts to wei).
         uint rateDecayed = toWei(deltaDays);
@@ -295,7 +305,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return feeRate;
     }
 
-    // returns: feeAmount and with withdrawableAmount for a given amount
+    // [..] returns: feeAmount and with withdrawableAmount for a given amount
     function getWithdrawable(
         uint deltaDays, 
         uint amount) public view returns (uint _feeAmount, uint _withdrawable) {
@@ -309,7 +319,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return (feeAmount, withdrawable);
     }
 
-    // returns: reward period (start, end).
+    // [..] returns: reward period (start, end).
     function getRewardPeriod() external view returns (uint start, uint end) {
         start = startTime;
         end = endTime;
@@ -320,7 +330,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ ACCOUNT (TX) FUNCTIONS /*/
     //////////////////////////////////////
 
-    // harvests: pending rewards.
+    // [..] harvests: pending rewards.
     function harvest() external nonReentrant {
         Users storage user = userInfo[msg.sender];
 
@@ -341,10 +351,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         user.rewardDebt = user.amount * accRewardPerShare / 1e12;
 
         emit Harvested(msg.sender, pendingReward, block.timestamp);
-
     }
 
-    // deposit: tokens.
+    // [..] deposit: tokens.
     function deposit(uint amount) external nonReentrant isDepositable(amount) {
         // gets: stored data for pool and user.
         Users storage user = userInfo[msg.sender];
@@ -382,7 +391,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Deposited(msg.sender, amount, block.timestamp);
     }
 
-    // withdraws: deposited tokens.
+    // [..] withdraws: deposited tokens.
     function withdraw(uint amount) external nonReentrant isWithdrawable(amount) {
         // gets: stored data for the account.
         Users storage user = userInfo[msg.sender];
@@ -430,7 +439,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Withdrawn(msg.sender, amount, feeAmount, block.timestamp);
     }
 
-    // enables: withdrawal without caring about rewards (for example, when rewards end).
+    // [..] enables: withdrawal without caring about rewards (for example, when rewards end).
     function emergencyWithdraw() external nonReentrant emergencyActive {
         // gets: pool & user data (to update later).
         Users storage user = userInfo[msg.sender];
@@ -455,7 +464,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ VIEW FUNCTIONS /*/
     ///////////////////////////////
     
-    // returns: key user info.
+    // [..] returns: key user info.
     function getUserInfo(address account) external view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
         Users storage user = userInfo[account];
         return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
@@ -465,17 +474,17 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ ADMIN FUNCTIONS /*/
     ////////////////////////////////
 
-    // enables: panic button (onlyDAO, whileSettable)
+    // [..] enables: panic button (onlyDAO, whileSettable)
     function toggleEmergency(bool enabled) external onlyDAO whileSettable {
         isEmergency = enabled;
     }
 
-    // toggles: pause state (onlyDAO, whileSettable)
+    // [..] toggles: pause state (onlyDAO, whileSettable)
     function toggleActive(bool enabled) external onlyDAO whileSettable {
         isActivated = enabled;
     }
 
-    // updates: feeDays (onlyDAO, whileSettable) todo
+    // [..] updates: feeDays (onlyDAO, whileSettable) todo
     function setFeeDays(uint _feeDays) external onlyDAO whileSettable {
         // gets: current fee days & ensures distinction (pool)
         require(feeDays != toWei(_feeDays), 'no change requested');
@@ -489,7 +498,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit FeeDaysUpdated(toWei(_feeDays));
     }
 
-    // sets: startTime & endTime (onlyDAO)
+    // [..] sets: startTime & endTime (onlyDAO)
     function setDelay(uint delayDays) external onlyDAO {
         require(startTime == 0, 'startTime has already been set');
         
@@ -512,7 +521,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         endTime = start + duration;
     }
 
-    // sets: DAO address (onlyDAO)
+    // [..] sets: DAO address (onlyDAO)
     function setDAO(address _DAO) external onlyDAO {
         require(_DAO != address(0), 'cannot set to zero address');
         // updates: DAO adddress
@@ -528,7 +537,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSettable = enabled;
     }
 
-    // overrides: feeDays (onlySOUL)
+    // [..] overrides: feeDays (onlySOUL)
     function setFeeDaysOverride(uint _feeDays) external onlySOUL {
         // gets: current fee days & ensures distinction (pool)
         require(feeDays != toWei(_feeDays), 'no change requested');
@@ -542,17 +551,17 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit FeeDaysUpdated(toWei(_feeDays));
     }
 
-    // overrides: active state (onlySOUL).
+    // [..] overrides: active state (onlySOUL).
     function toggleActiveOverride(bool enabled) external onlySOUL {
         isActivated = enabled;
     }
 
-    // overrides logoURI (onlySOUL).
+    // [..] overrides logoURI (onlySOUL).
     function setLogoURI(string memory _logoURI) external onlySOUL {
         logoURI = _logoURI;
     }
 
-    // sets: soulDAO address (onlySOUL).
+    // [..] sets: soulDAO address (onlySOUL).
     function setSoulDAO(address _soulDAO) external onlySOUL {
         require(_soulDAO != address(0), 'cannot set to zero address');
         // updates: soulDAO adddress
