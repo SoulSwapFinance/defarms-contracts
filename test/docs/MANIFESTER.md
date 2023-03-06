@@ -15,15 +15,16 @@
     - [ .. ] verify decimals
 
 ## **VARIABLES**
-- [ .. ] **isPaused**
-    - [ .. ] **togglePause(true**)
-        - [insert disabled functions here...]
-    - [ .. ] **togglePause(false)**
-        - [insert enabled functions here...]
+- [ .√. ] **isPaused**
+    - [ .√. ] **togglePause(true**)
+    - [ .√. ] **togglePause(false)**
 - [ .. ] **bloodSacrifice**
     - [ .. ] **updateSacrifice**
-        - [ .. ] updates bloodSacrifice
+        - [ .. ] updates: **bloodSacrifice**
         - [ .. ] calculate: **getSacrifice**()
+- [ .. ] **enchantedShare**
+    - [ .. ] **updateSacrifice**
+        - [ .. ] updates: **enchantedShare**
 - [ .. ] **soulDAO**
     - [ .. ] **([ updateDAO ])**
         - [ .. ] updates soulDAO
@@ -46,7 +47,7 @@
     - [ .. ] [insert expectations...]
 
 ## **Modifiers**
-- [ .. ] **whileActive()**
+- [ .√. ] **whileActive()**
     - [ .. ] createManifestation()
 - [ .. ] **exists(id, limit)**
     - [ .. ] **initializeManifestation()**

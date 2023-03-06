@@ -112,7 +112,7 @@ contract Manifester is IManifester {
         totalEnchanters ++;
     }
 
-    // [..] creates: Manifestation
+    // [.√.] creates: Manifestation
     function createManifestation(
         address depositAddress,
         address rewardAddress,
@@ -166,7 +166,7 @@ contract Manifester is IManifester {
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
 
-    // [..] initializes: manifestation
+    // [.√.] initializes: manifestation
     function initializeManifestation(uint id) external exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];

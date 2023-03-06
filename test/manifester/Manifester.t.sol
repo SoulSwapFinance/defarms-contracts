@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import "./setup/Setup.t.sol";
-import { stdStorage, StdStorage, Test, Vm } from "forge-std/Test.sol";
-import { Utilities } from "./utils/Utilities.sol";
-import { console } from "forge-std/console.sol";
-
-// import { Vm } from "forge-std/Test.sol";
+import "../setup/Setup.t.sol";
 
 contract ManifesterTest is Test, Setup {
-    Utilities internal utils;
 
     // internal functions //
     // updates: given enchanter status (by id).

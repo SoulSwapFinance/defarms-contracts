@@ -7,6 +7,10 @@ import "src/mocks/MockToken.sol";
 import "src/mocks/MockPair.sol";
 import "src/mocks/MockFactory.sol";
 
+import { stdStorage, StdStorage, Test, Vm } from "forge-std/Test.sol";
+import { Utilities } from "../utils/Utilities.sol";
+import { console } from "forge-std/console.sol";
+
 contract Setup {
     Manifester manifester;
     Manifestation manifestation;
@@ -18,6 +22,7 @@ contract Setup {
     MockPair stablePair;
 
     MockFactory public factory;
+    Utilities internal utils;
 
     // addresses //
     address public FACTORY_ADDRESS;
