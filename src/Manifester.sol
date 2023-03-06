@@ -49,7 +49,7 @@ contract Manifester is IManifester {
         address enchanterAddress;
     }
 
-    // [..] manifestation info
+    // [.√.] manifestation info
     Manifestations[] public mInfo;
 
     mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id
@@ -325,7 +325,7 @@ contract Manifester is IManifester {
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
-    // [√] adds: Enchanter (instance).
+    // [.√.] adds: Enchanter (instance).
     function addEnchanter(address _account) public onlySOUL {     
         require(!enchanted[_account], "already an enchanter");
         // appends and populates: a new Enchanter struct (instance).
@@ -342,7 +342,7 @@ contract Manifester is IManifester {
 
         emit Enchanted(id, _account, true);
     }
-    // [..] updates: Enchanter status.
+    // [.√.] updates: Enchanter status.
     function updateEnchanter(uint id, bool isActive) external onlySOUL exists(id, totalEnchanters) {
         // gets: stored data for enchanter.
         Enchanters storage enchanter = eInfo[id];
@@ -350,7 +350,7 @@ contract Manifester is IManifester {
         enchanter.isActive = isActive;
     }
 
-    // [..] updates: factory address.
+    // [.√.] updates: factory address.
     function updateFactory(address _factoryAddress) external onlySOUL {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
     }
