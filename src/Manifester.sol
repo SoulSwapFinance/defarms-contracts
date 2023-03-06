@@ -18,16 +18,17 @@ contract Manifester is IManifester {
         bool isActive;
     }
 
-    // enchanters info.
+    // [√] enchanters info.
     Enchanters[] public eInfo;
 
     address[] public manifestations;
     address[] public daos;
-    mapping(address => bool) public enchanted; // checks whether already an enchanter
+    // checks: whether already an enchanter.
+    mapping(address => bool) public enchanted; 
 
     address public override soulDAO;
 
-    // immatable oracle constants
+    // [..] immatable oracle constants
     IOracle private immutable nativeOracle;
     uint private immutable oracleDecimals;
 
@@ -38,7 +39,7 @@ contract Manifester is IManifester {
     uint public bloodSacrifice;
     bool public isPaused;
 
-    // creates: Manifestations struct (strictly immutable variables).
+    // [..] creates: Manifestations struct (strictly immutable variables).
     struct Manifestations {
         address mAddress;
         address assetAddress;
@@ -48,7 +49,7 @@ contract Manifester is IManifester {
         address enchanterAddress;
     }
 
-    // manifestation info
+    // [..] manifestation info
     Manifestations[] public mInfo;
 
     mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id
@@ -68,24 +69,25 @@ contract Manifester is IManifester {
     event UpdatedEnchantShare(uint eShare);
     event UpdatedDAO(address dao);
 
-    // proxy for pausing contract.
+    // [..] proxy for pausing contract.
     modifier whileActive {
         require(!isPaused, 'contract is currently paused');
         _;
     }
 
-    // restricts: certain functions to soulDAO-only.
+    // [..] restricts: certain functions to soulDAO-only.
     modifier onlySOUL() {
         require(soulDAO == msg.sender, "onlySOUL: caller is not the soulDAO address");
         _;
     }
 
-    // restricts: only existing manifestations.
+    // [..] restricts: only existing manifestations.
     modifier exists(uint id, uint total) {
         require(id <= total, 'does not exist.');
         _;
     }
 
+    // [..] sets: key variables.
     constructor(
         address _factoryAddress,
         address _usdcAddress,
@@ -103,11 +105,8 @@ contract Manifester is IManifester {
         nativeOracle = IOracle(_nativeOracle);
         oracleDecimals = _oracleDecimals;
 
-        // creates: Enchantress as the first Enchanter.
-        eInfo.push(Enchanters({
-            account: 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8,
-            isActive: true
-        }));
+        // creates: the first Enchanter[0].
+        addEnchanter(msg.sender);
 
         // increments [+]: totalEnchanters.
         totalEnchanters ++;
@@ -145,10 +144,10 @@ contract Manifester is IManifester {
         // populates: the getManifestation using the depositAddress and id.
         getManifestation[depositAddress][id] = manifestation;
 
-        // stores the manifestation to the manifestations[] array
+        // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
 
-        // stores the dao to the daos[] array
+        // stores: dao to the daos[] array
         daos.push(msg.sender);
 
         // increments: the total number of manifestations
@@ -326,8 +325,8 @@ contract Manifester is IManifester {
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
-    // [..] adds: Enchanter (instance).
-    function addEnchanter(address _account) external onlySOUL {     
+    // [√] adds: Enchanter (instance).
+    function addEnchanter(address _account) public onlySOUL {     
         require(!enchanted[_account], "already an enchanter");
         // appends and populates: a new Enchanter struct (instance).
         eInfo.push(Enchanters({
@@ -385,7 +384,6 @@ contract Manifester is IManifester {
 
         emit Paused(enabled);
     }
-
 
     ////////////////////////////////
         /*/ HELPER FUNCTIONS /*/

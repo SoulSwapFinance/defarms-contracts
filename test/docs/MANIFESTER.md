@@ -48,8 +48,8 @@
 ## **Modifiers**
 - [ .. ] **whileActive()**
     - [ .. ] createManifestation()
-- [ .. ] exists(id)
-    - [ .. ] initializeManifestation()
+- [ .. ] **exists(id, limit)**
+    - [ .. ] **initializeManifestation()**
 
 ## **Getters**
 - [ .. ] **getUserInfo()**

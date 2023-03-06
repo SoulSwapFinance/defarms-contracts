@@ -12,7 +12,7 @@ contract ManifesterScript is Script {
     address public _nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
     
     uint public _oracleDecimals = 8;
-    string public _nativeSymbol = 'FTM';
+    string public _nativeSymbol = 'NATIVE';
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PK");

@@ -36,10 +36,6 @@ contract ManifestationTest is Test, Setup {
         string memory _assetSymbol = 'NATIVE';
 
         (string memory name, string memory symbol, string memory logoURI, string memory assetSymbol) = _getStrings();
-        // console.log('name: %s', name);
-        // console.log('symbol: %s', symbol);
-        // console.log('logoURI: %s', logoURI);
-        // console.log('assetSymbol: %s', assetSymbol);
 
         assertEq(name, _name);
         assertEq(symbol, _symbol);

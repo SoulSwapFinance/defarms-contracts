@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import { console } from "forge-std/console.sol";
-import { stdStorage, StdStorage, Test } from "forge-std/Test.sol";
-import { Utilities } from "../utils/Utilities.sol";
-
 import "src/Manifestation.sol";
 import "src/Manifester.sol";
 import "src/mocks/MockToken.sol";
 import "src/mocks/MockPair.sol";
 import "src/mocks/MockFactory.sol";
 
-contract Setup is Test {
+contract Setup {
     Manifester manifester;
     Manifestation manifestation;
     MockToken rewardToken;
@@ -22,7 +18,6 @@ contract Setup is Test {
     MockPair stablePair;
 
     MockFactory public factory;
-    Utilities internal utils;
 
     // addresses //
     address public FACTORY_ADDRESS;
