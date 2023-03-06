@@ -52,7 +52,8 @@ contract Manifester is IManifester {
     // [.√.] manifestation info
     Manifestations[] public mInfo;
 
-    mapping(address => mapping(uint => address)) public getManifestation; // depositAddress, id
+    // [ .. ] depositAddress, id.
+    mapping(address => mapping(uint => address)) public getManifestation; 
 
     event SummonedManifestation(
         uint indexed id,
@@ -110,6 +111,9 @@ contract Manifester is IManifester {
 
         // increments [+]: totalEnchanters.
         totalEnchanters ++;
+
+        // sets: eShare to 1%.
+        updateEnchantShare(1);
     }
 
     // [.√.] creates: Manifestation
@@ -256,8 +260,8 @@ contract Manifester is IManifester {
 
     // [..] returns: sacrificial split between DAO & enchanter.
     function getSplit(uint sacrifice) public view returns (uint toDAO, uint toEnchanter) {
-        toEnchanter = sacrifice * eShare;
-        toDAO = sacrifice - toEnchanter;
+        toEnchanter = sacrifice * eShare / 100;
+        toDAO = sacrifice * bloodSacrifice / 100;
     }
 
     // [..] returns: total rewards.
@@ -266,7 +270,7 @@ contract Manifester is IManifester {
         return totalRewards;
     }
 
-    // [..] returns: sacrifice amount.
+    // [.√.] returns: sacrifice amount.
     function getSacrifice(uint _rewards) public view returns (uint) {
         uint sacrifice = (_rewards * bloodSacrifice) / 100;
         return sacrifice;
@@ -363,7 +367,7 @@ contract Manifester is IManifester {
     }
 
     // [..] updates: eShare amount.
-    function updateEnchantShare(uint _share) external onlySOUL {
+    function updateEnchantShare(uint _share) public onlySOUL {
         require(_share <= 100, 'cannot exceed 100%.');
         eShare = toWei(_share);
 
@@ -378,7 +382,7 @@ contract Manifester is IManifester {
         emit UpdatedSacrifice(_sacrifice);
     }
 
-    // [..] updates: pause state.
+    // [.√.] updates: pause state.
     function togglePause(bool enabled) external onlySOUL {
         isPaused = enabled;
 

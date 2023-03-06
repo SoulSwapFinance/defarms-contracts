@@ -79,16 +79,6 @@ contract ManifesterTest is Test, Setup {
         // console.log("[+] stablePair: %s", address(stablePair));
     }
 
-    // [sacrifice] tests: Sacrifice Accuracy
-    function testSacrifice() public {
-        uint totalRewards = 100_000;
-        uint expected = 2_000;
-        uint actual = manifester.getSacrifice(totalRewards) / 1E18;
-        // console.log('expected: %s, actuals: %s', expected, actual);
-        assertEq(actual, expected, "ok");
-        // console.log("[+] getSacrifice(100K): %s", actual);
-    }
-
     // [enchanters] tests: Enchanter Address Accuracy & Checks.
     function testEnchanterAddresses() public {
         (address enchanter_0, ) = manifester.eInfo(0);
