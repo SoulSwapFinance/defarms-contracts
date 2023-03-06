@@ -95,7 +95,7 @@ contract ManifesterTest is Test, Setup {
         // console.log("[+] getSacrifice(100K): %s", actual);
     }
 
-    // [enchanters] tests: Enchanter Accuracy & Efficacy
+    // [enchanters] tests: Enchanter Address Accuracy & Checks.
     function testEnchanterAddresses() public {
         (address enchanter_0, ) = manifester.eInfo(0);
         
@@ -115,6 +115,7 @@ contract ManifesterTest is Test, Setup {
         console.log('[+] adding duplicate enchanter[0] reverted (as expected).');
     }
 
+    // [enchanters] tests: Enchanter Status Accuracy & Updates.
     function testEnchanterStatuses() public {
         // adds: enchanter[1]
         manifester.addEnchanter(address(0xee));

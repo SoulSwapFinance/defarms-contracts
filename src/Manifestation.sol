@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.9;
 
-import './Libraries.sol';
-import './Security.sol';
+import './lib/Libraries.sol';
+import './lib/Security.sol';
 
 contract Manifestation is IManifestation, ReentrancyGuard {
     using SafeERC20 for IERC20;

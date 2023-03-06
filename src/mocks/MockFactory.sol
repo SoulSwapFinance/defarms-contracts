@@ -2,7 +2,7 @@
 
 pragma solidity >=0.5.0;
 
-import 'src/Libraries.sol';
+import 'src/lib/Libraries.sol';
 
 // File: contracts/interfaces/ISoulSwapERC20.sol
 
