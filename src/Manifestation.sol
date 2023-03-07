@@ -22,6 +22,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     IERC20 public depositToken;
     IERC20 public assetToken;
     IERC20 public rewardToken;
+    IERC20 public AURA;
 
     string public override name;
     string public override symbol;
@@ -35,6 +36,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     uint public rewardPerSecond;
     uint public accRewardPerShare;
     uint public lastRewardTime;
+    uint public boost;
 
     uint public override startTime;
     uint public override endTime;
@@ -49,12 +51,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // user info
     struct Users {
-        uint amount;            // deposited amount.
-        uint rewardDebt;        // reward debt (see: pendingReward).
-        uint withdrawTime;      // last withdrawal time.
-        uint depositTime;       // first deposit time.
-        uint timeDelta;         // seconds accounted for in fee calculation.
-        uint deltaDays;         // days accounted for in fee calculation
+        uint amount;                    // deposited amount.
+        uint rewardDebt;                // reward debt (see: pendingReward).
+        uint withdrawTime;              // (latest) withdrawal time.
+        uint depositTime;               // (first) deposit time.
+        uint timeDelta;                 // seconds accounted for in fee calculation.
+        uint deltaDays;                 // days accounted for in fee calculation
     }
 
     // user info
@@ -111,6 +113,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     event Harvested(address indexed user, uint amount, uint timestamp);
     event Deposited(address indexed user, uint amount, uint timestamp);
     event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
+    event UpdatedMultiplier(uint multiplier);
 
     event Withdrawn(address indexed user, uint amount, uint feeAmount, uint timestamp);
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
@@ -121,7 +124,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         manifester = IManifester(msg.sender);
     }
 
-    // [..] initializes: manifestation by the manifester (at creation).
+    // [.√.] initializes: manifestation by the manifester (at creation).
     function manifest(
         address _creatorAddress,
         address _assetAddress,
@@ -129,7 +132,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         address _rewardAddress
         ) external onlyManifester {
         require(!isManifested, 'initialize once');
-        // sets: wnative and usdc address using manifester as ref.
+        // sets: aura, wnative and usdc address using manifester as ref.
+        address auraAddress = manifester.auraAddress();
         wnativeAddress = manifester.wnativeAddress();
         usdcAddress = manifester.usdcAddress();
 
@@ -143,6 +147,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: from input data.
         assetToken = IERC20(assetAddress);
+        AURA = IERC20(auraAddress);
         depositToken = IERC20(depositAddress);
         rewardToken = IERC20(rewardAddress);
 
@@ -165,8 +170,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
     
-    function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external {
-        require(msg.sender == address(manifester), 'only the Manifester may set rewards');
+    // [..] sets: rewards (callable from manifester)
+    function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
         require(!isSetup, 'already setup');
 
         // sets: key info.
@@ -220,13 +225,16 @@ contract Manifestation is IManifestation, ReentrancyGuard {
             _accRewardPerShare = accRewardPerShare + reward * 1e12 / depositSupply;
         }
 
-        // returns: rewardShare for user minus the amount paid out (user)
-        pendingAmount = user.amount * _accRewardPerShare / 1e12 - user.rewardDebt;
+        // returns: rewardShare for user minus the amount paid out (user).
+        uint bonusAmount = getBonusAmount(account, user.amount);
+        uint scaledAmount = user.amount + bonusAmount;
+        // calculates: using scaledAmount instead of user.amount.
+        pendingAmount = scaledAmount * _accRewardPerShare / 1e12 - user.rewardDebt;
 
         return pendingAmount;
     }
 
-    // [..] returns: multiplier during a period.
+    // [.√.] returns: multiplier during a period.
     function getMultiplier(uint from, uint to) public pure returns (uint multiplier) {
         multiplier = to - from;
 
@@ -289,7 +297,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return deltaDays;     
     }
 
-     // [..] returns: feeRate and timeDelta.
+     // [.√.] returns: feeRate and timeDelta.
     function getFeeRate(uint deltaDays) public view returns (uint feeRate) {
         // calculates: rateDecayed (converts to wei).
         uint rateDecayed = toWei(deltaDays);
@@ -324,6 +332,14 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         start = startTime;
         end = endTime;
         return (start, end);
+    }
+
+    // [..] todo: fix maths.
+    function getBonusAmount(address account, uint amount) public view returns(uint _bonusAmount) {
+        uint auraShare = AURA.balanceOf(account) / AURA.totalSupply();
+        // staked amount * auraShare (%) * boost (%)
+        _bonusAmount = amount * auraShare * boost / 100;
+        return _bonusAmount;
     }
 
     //////////////////////////////////////
@@ -532,7 +548,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ SOUL (OVERRIDE) FUNCTIONS /*/
     //////////////////////////////////////////
 
-    // prevents: funny business (onlySOUL).
+    // [..] prevents: funny business (onlySOUL).
     function toggleSettable(bool enabled) external onlySOUL {
         isSettable = enabled;
     }
@@ -566,6 +582,19 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(_soulDAO != address(0), 'cannot set to zero address');
         // updates: soulDAO adddress
         soulDAO = _soulDAO;
+    }
+
+    // [..] sets: AURA token.
+    function setAURA(address _auraAddress) external onlySOUL {
+        AURA = IERC20(_auraAddress);
+    }
+
+    // [..] sets: boost scale for AURA.
+    function setBoost(uint _boost) external onlySOUL {
+        require(_boost <= 100, 'cannot exceed 100%.');
+        boost = toWei(_boost);
+
+        emit UpdatedMultiplier(_boost);
     }
 
     ///////////////////////////////

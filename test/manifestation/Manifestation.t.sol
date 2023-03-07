@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.13;
 
-import '../manifester/Manifester.t.sol';
+import '../setup/Setup.t.sol';
 
 contract ManifestationTest is Test, Setup {
 

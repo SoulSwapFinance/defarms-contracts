@@ -35,6 +35,7 @@ contract Manifester is IManifester {
     string public override nativeSymbol;
     address public override wnativeAddress;
     address public override usdcAddress;
+    address public override auraAddress;
 
     uint public bloodSacrifice;
     bool public isPaused;
@@ -91,6 +92,7 @@ contract Manifester is IManifester {
     // [..] sets: key variables.
     constructor(
         address _factoryAddress,
+        address _auraAddress,
         address _usdcAddress,
         address _wnativeAddress,
         address _nativeOracle, 
@@ -100,8 +102,11 @@ contract Manifester is IManifester {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
         bloodSacrifice = toWei(2);
         nativeSymbol = _nativeSymbol;
+
+        auraAddress = _auraAddress;
         usdcAddress = _usdcAddress;
         wnativeAddress = _wnativeAddress;
+
         soulDAO = msg.sender;
         nativeOracle = IOracle(_nativeOracle);
         oracleDecimals = _oracleDecimals;
@@ -354,7 +359,12 @@ contract Manifester is IManifester {
         enchanter.isActive = isActive;
     }
 
-    // [.√.] updates: factory address.
+    // [..] updates: aura address.
+    function updateAura(address _auraAddress) external onlySOUL {
+        auraAddress = _auraAddress;
+    }
+
+    // [..] updates: factory address.
     function updateFactory(address _factoryAddress) external onlySOUL {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
     }

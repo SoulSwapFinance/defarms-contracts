@@ -11,16 +11,14 @@ contract ManifesterTest is Test, Setup {
         manifester.updateEnchanter(id, isActive);
     }
 
-    // tests //
-
     // [mInfo]: Addresses (manifestation, dao, asset, deposit, reward)
     function testInfo() public virtual {
         uint id = 0;
 
         address mAddress = manifester.manifestations(id);
-        address assetAddress = address(wnativeToken);
-        address depositAddress = address(nativePair);
-        address rewardAddress = address(rewardToken);
+        address assetAddress = address(WNATIVE);
+        address depositAddress = address(NATIVE_PAIR);
+        address rewardAddress = address(REWARD);
         address enchanterAddress = address(this);
 
          // manifestation address //
@@ -61,10 +59,10 @@ contract ManifesterTest is Test, Setup {
         // console.log("[+] enchanterAddress: %s", enchanterAddress);
     }
 
-    // [nativePair] test: Native Pair
+    // [NATIVE_PAIR] test: Native Pair
     function testPairs() public {
-        bool _isNative_Native = nativePair.isNative();
-        bool _isNative_Stable = stablePair.isNative();
+        bool _isNative_Native = NATIVE_PAIR.isNative();
+        bool _isNative_Stable = STABLE_PAIR.isNative();
         
         bool isNative_Native = true;
         bool isNative_Stable = false;
@@ -72,11 +70,11 @@ contract ManifesterTest is Test, Setup {
         assertEq(_isNative_Native, isNative_Native, "ok");
         assertEq(_isNative_Stable, isNative_Stable, "ok");
 
-        // console.log("[+] isNative(nativePair): %s", nativePair.isNative());
-        // console.log("[+] isNative(stablePair): %s", stablePair.isNative());
+        // console.log("[+] isNative(NATIVE_PAIR): %s", NATIVE_PAIR.isNative());
+        // console.log("[+] isNative(STABLE_PAIR): %s", STABLE_PAIR.isNative());
 
-        // console.log("[+] nativePair: %s", address(nativePair));
-        // console.log("[+] stablePair: %s", address(stablePair));
+        // console.log("[+] NATIVE_PAIR: %s", address(NATIVE_PAIR));
+        // console.log("[+] STABLE_PAIR: %s", address(STABLE_PAIR));
     }
 
     // [enchanters] tests: Enchanter Address Accuracy & Checks.
@@ -140,3 +138,5 @@ contract ManifesterTest is Test, Setup {
         console.log('[+] enchanter[0, 1] statuses updated to: %s.', status_0_);
     }
 }
+
+// todo: test for 9 decimals, 0 decimals

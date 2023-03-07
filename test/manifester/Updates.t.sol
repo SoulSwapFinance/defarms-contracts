@@ -20,6 +20,5 @@ contract UpdatesTest is Test, Setup {
         manifester.updateFactory(factory_0);
         vm.stopPrank();
         console.log('[+] factory update reverts when caller is not soulDAO (as expected).');
-
     }
 }

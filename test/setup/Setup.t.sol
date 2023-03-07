@@ -12,35 +12,47 @@ import { Utilities } from "../utils/Utilities.sol";
 import { console } from "forge-std/console.sol";
 
 contract Setup {
+    // contracts.
     Manifester manifester;
     Manifestation manifestation;
-    MockToken rewardToken;
-    MockToken wnativeToken;
-    MockToken usdcToken;
-    MockToken depositToken;
-    MockPair nativePair;
-    MockPair stablePair;
+
+    // mock custom tokens.
+    MockToken AURA;
+    MockToken DEPOSIT;
+    MockToken REWARD;
+
+    // mock asset tokens.
+    MockToken USDC;
+    MockToken WNATIVE;
+
+    // mock pairs.
+    MockPair NATIVE_PAIR;
+    MockPair STABLE_PAIR;
 
     MockFactory public factory;
     Utilities internal utils;
 
     // addresses //
+    address public MANIFESTER_ADDRESS;
+    address public MANIFESTATION_0_ADDRESS;
+
     address public FACTORY_ADDRESS;
     address public REWARD_ADDRESS;
     address public DEPOSIT_ADDRESS;
-    address public WNATIVE_ADDRESS;
+
+    address public AURA_ADDRESS;
     address public USDC_ADDRESS;
-    address public MANIFESTER_ADDRESS;
+    address public WNATIVE_ADDRESS;
+
     address public NATIVE_PAIR_ADDRESS;
     address public STABLE_PAIR_ADDRESS;
-    address public MANIFESTATION_0_ADDRESS;
 
     // numeric constants //
     uint public immutable ORACLE_DECIMALS = 8;
     uint public immutable DURA_DAYS = 90;
     uint public immutable FEE_DAYS = 14;
     uint public immutable DAILY_REWARD = 100;
-    uint public immutable INITIAL_SUPPLY = 1_000_000_000;
+    uint public immutable INITIAL_SUPPLY = 1_000_000_000 * 1E18;
     uint public immutable ONE_DAY = 1 days;
 
     // admins //
@@ -59,57 +71,66 @@ contract Setup {
         factory = new MockFactory();
         FACTORY_ADDRESS = address(factory);
 
+        // initializes: Aura Token
+        AURA = new MockToken(
+            "AuraToken",
+            "AURA",
+            INITIAL_SUPPLY
+        );
+        AURA_ADDRESS = address(AURA);
+
         // initializes: Native Token
-        wnativeToken = new MockToken(
+        WNATIVE = new MockToken(
             "Wrapped Fantom",
             "WFTM",
             INITIAL_SUPPLY                     // totalSupply
         );
-        WNATIVE_ADDRESS = address(wnativeToken);
+        WNATIVE_ADDRESS = address(WNATIVE);
 
         // initializes: USDC Token
-        usdcToken = new MockToken(
+        USDC = new MockToken(
             "USD Coin",
             "USDC",
             INITIAL_SUPPLY                     // totalSupply
         );
-        USDC_ADDRESS = address(usdcToken);
+        USDC_ADDRESS = address(USDC);
 
         // initializes: Reward Token
-        rewardToken = new MockToken(
+        REWARD = new MockToken(
             "RewardToken",
             "REWARD",
             INITIAL_SUPPLY                     // totalSupply
         );
-        REWARD_ADDRESS = address(rewardToken);
+        REWARD_ADDRESS = address(REWARD);
 
-        nativePair = new MockPair(
+        NATIVE_PAIR = new MockPair(
             FACTORY_ADDRESS,                  // factoryAddress
-            address(rewardToken),             // token0Address
-            address(wnativeToken),            // token1Address
-            address(wnativeToken),            // wnativeAddress
+            address(REWARD),             // token0Address
+            address(WNATIVE),            // token1Address
+            address(WNATIVE),            // wnativeAddress
             INITIAL_SUPPLY                    // totalSupply
         );
-        NATIVE_PAIR_ADDRESS = address(nativePair);
-        DEPOSIT_ADDRESS = address(nativePair); 
+        NATIVE_PAIR_ADDRESS = address(NATIVE_PAIR);
+        DEPOSIT_ADDRESS = address(NATIVE_PAIR); 
 
-        stablePair = new MockPair(
+        STABLE_PAIR = new MockPair(
             FACTORY_ADDRESS,                  // factoryAddress
-            address(rewardToken),             // token0Address
-            address(usdcToken),               // token1Address
-            address(wnativeToken),            // wnativeAddress
+            address(REWARD),             // token0Address
+            address(USDC),               // token1Address
+            address(WNATIVE),            // wnativeAddress
             INITIAL_SUPPLY                    // totalSupply
         );
-        STABLE_PAIR_ADDRESS = address(stablePair);
+        STABLE_PAIR_ADDRESS = address(STABLE_PAIR);
 
         // deploys: Manifester Contract
         manifester = new Manifester(
             FACTORY_ADDRESS,
+            AURA_ADDRESS,
             USDC_ADDRESS,
             WNATIVE_ADDRESS,
             NATIVE_ORACLE_ADDRESS,
             ORACLE_DECIMALS,
-            wnativeToken.symbol()
+            WNATIVE.symbol()
         );
         MANIFESTER_ADDRESS = address(manifester);
 
@@ -124,8 +145,22 @@ contract Setup {
         MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
         manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
 
+        // approves: manifestation to transferFrom REWARD token.
+        REWARD.approve(MANIFESTER_ADDRESS, INITIAL_SUPPLY * 1E18);
+
         // initializes: Manifestation[0]
         manifester.initializeManifestation(0);
+        
+        // sets Manifestation[0]: rewards and duration variables.
+        manifester.launchManifestation(
+            0,            // id
+            DURA_DAYS,    // duraDays
+            DAILY_REWARD, // dailyRewards
+            FEE_DAYS      // feeDays
+        );
 
+        // sets: boost for Manifestation[0].
+        manifestation.setBoost(10);
+        // sets: aura for Manifestation[0].
     }
 }
