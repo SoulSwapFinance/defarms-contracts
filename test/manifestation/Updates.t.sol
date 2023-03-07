@@ -4,7 +4,7 @@ pragma solidity >=0.8.13;
 import "../setup/Setup.t.sol";
 
 contract UpdatesTest is Test, Setup {
-    
+
     function testToggleActive() public {
         bool isActive_0 = manifestation.isActivated();
         // console.log('isActive(0)', isActive_0);

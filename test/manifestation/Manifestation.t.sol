@@ -21,8 +21,8 @@ contract ManifestationTest is Test, Setup {
         assetSymbol = manifestation.assetSymbol();
     }
 
-    function _userInfo() internal view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
-        (amount, rewardDebt, withdrawTime, depositTime, timeDelta, deltaDays) = manifestation.getUserInfo();
+    function _userInfo(address _account) internal view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
+        (amount, rewardDebt, withdrawTime, depositTime, timeDelta, deltaDays) = manifestation.getUserInfo(_account);
     }
 
     // [creation]: Manifestation Creation.
@@ -64,7 +64,7 @@ contract ManifestationTest is Test, Setup {
         // moves (warps): to timestamp 100.
         vm.warp(86_402);
         // (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo();
-        (uint amount, , , , ,) = _userInfo();
+        (uint amount, , , , ,) = _userInfo(address(this));
         assertEq(amount, _amount);
         console.log('[+] deposited amount reported accurately.');
     }

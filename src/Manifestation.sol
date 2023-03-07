@@ -102,7 +102,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
-    // [..] ensures: only the Manifester address is the sender.
+    // [.√.] ensures: only the Manifester address is the sender.
     modifier onlyManifester() {
         require(address(manifester) == msg.sender, "onlyManifester: caller is not the Manifester address");
         _;
@@ -164,7 +164,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
     
-    // [..] sets: rewards (callable from manifester)
+    // [.√.] sets: rewards (callable from manifester)
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
         require(!isSetup, 'already setup');
 
@@ -327,7 +327,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ ACCOUNT (TX) FUNCTIONS /*/
     //////////////////////////////////////
 
-    // [..] harvests: pending rewards.
+    // [.√.] harvests: pending rewards.
     function harvest() external nonReentrant {
         Users storage user = userInfo[msg.sender];
 
@@ -350,7 +350,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Harvested(msg.sender, pendingReward, block.timestamp);
     }
 
-    // [..] deposit: tokens.
+    // [.√.] deposit: tokens.
     function deposit(uint amount) external nonReentrant isDepositable(amount) {
         // gets: stored data for pool and user.
         Users storage user = userInfo[msg.sender];
@@ -467,11 +467,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
     }
 
-    function getUserInfo() external view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
-        Users storage user = userInfo[msg.sender];
-        return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
-    }
-
     ////////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ////////////////////////////////
@@ -500,7 +495,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit FeeDaysUpdated(toWei(_feeDays));
     }
 
-    // [..] sets: startTime & endTime (onlyDAO)
+    // [.√.] sets: startTime & endTime (onlyDAO)
     function setDelay(uint delayDays) external onlyDAO {
         require(startTime == 0, 'startTime has already been set');
         

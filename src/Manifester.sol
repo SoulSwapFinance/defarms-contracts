@@ -198,7 +198,7 @@ contract Manifester is IManifester {
         );
     }
 
-    // [..] launches: Manifestation.
+    // [.√.] launches: Manifestation.
     function launchManifestation(
         uint id,
         uint duraDays,
@@ -262,7 +262,7 @@ contract Manifester is IManifester {
         return latestAnswer;
     }
 
-    // [..] returns: sacrificial split between DAO & enchanter.
+    // [.√.] returns: sacrificial split between DAO & enchanter.
     function getSplit(uint sacrifice) public view returns (uint toDAO, uint toEnchanter) {
         toEnchanter = sacrifice * eShare / 100;
         toDAO = sacrifice * bloodSacrifice / 100;
