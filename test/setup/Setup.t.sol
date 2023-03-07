@@ -164,6 +164,12 @@ contract Setup {
         
         // sets: start time, end time
         manifestation.setDelay(0);
+
+        // unpauses: Manifestation[0].
+        manifestation.toggleActive(true);
+
+        // approves: deposit token to Manifestation[0].
+        ERC20(DEPOSIT_ADDRESS).approve(MANIFESTATION_0_ADDRESS, INITIAL_SUPPLY * 1E18);
     }
 
     function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }

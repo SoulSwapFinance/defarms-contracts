@@ -13,7 +13,7 @@ contract GettersTest is Test, Setup {
     // }
 
     // [multiplier] tests: TVL accuracy.
-    function testGetMultiplier() public {
+    function testMultiplier() public {
         (uint _from, uint _to) = (100, 400);
         // uint TO = 400;
         uint _multiplier = _to - _from;
@@ -23,13 +23,13 @@ contract GettersTest is Test, Setup {
     }
 
     // [TVL] tests: TVL accuracy.
-    function testGetTVL() public {}
+    function testTVL() public {}
 
     // [price] tests: pricePerToken accuracy.
-    function testGetPricePerToken() public {}
+    function testPricePerToken() public {}
 
     // [fee] tests: feeRate accuracy.
-    function testGetFeeRate() public {
+    function testFeeRate() public {
         uint deltaDays = 10;
         uint _feeRate = (FEE_DAYS - deltaDays) * 1E18;
 
@@ -41,7 +41,7 @@ contract GettersTest is Test, Setup {
     }
 
     // [bonus] tests: bonus shares.
-    function testGetBonusAmount() public {
+    function testBonusAmount() public {
         address _account = address(this);
         uint _amount = toWei(500);
         uint _boost = toWei(10);
@@ -56,5 +56,15 @@ contract GettersTest is Test, Setup {
         assertEq(boost, _boost);
         assertEq(bonus, _bonus);
         console.log('[+] bonus amount reported accurately.');
+    }
+
+    function testRewardPeriod() public {
+        (uint startTime, uint endTime) = manifestation.getRewardPeriod();
+        uint rewardPeriod = (endTime - startTime) / 1 days;
+        // console.log('startTime: %s', startTime);
+        // console.log('endTime: %s', endTime);
+        // console.log('rewardPeriod: %s', rewardPeriod);
+        assertEq(rewardPeriod, DURA_DAYS);
+        console.log('[+] set reward period to: %s days successfully.', rewardPeriod);
     }
 }

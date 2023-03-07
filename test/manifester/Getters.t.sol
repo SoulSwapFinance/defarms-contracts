@@ -18,7 +18,7 @@ contract GettersTest is Test, Setup {
     }
 
     // [sacrifice] tests: Sacrifice Accuracy.
-    function testGetSacrifice() public {
+    function testSacrifice() public {
         uint totalRewards = 100_000;
         uint expected = 2_000;
         uint actual = _getSacrifice(totalRewards);
@@ -27,7 +27,7 @@ contract GettersTest is Test, Setup {
         // console.log("[+] getSacrifice(100K): %s", actual);
     }
 
-    function testGetSplit() public {
+    function testSplit() public {
         uint _eShare = _getShare();
         uint sacrifice = 1_000;
         uint toDAO = 20 * 1E18;
