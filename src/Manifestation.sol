@@ -337,8 +337,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [..] todo: fix maths.
     function getBonusAmount(address account, uint amount) public view returns(uint _bonusAmount) {
         uint auraShare = AURA.balanceOf(account) / AURA.totalSupply();
-        // staked amount * auraShare (%) * boost (%)
-        _bonusAmount = amount * auraShare * boost / 100;
+        // staked amount * auraShare (%) * boost (%) / 100%
+        _bonusAmount = fromWei(amount) * auraShare * boost / 100;
         return _bonusAmount;
     }
 

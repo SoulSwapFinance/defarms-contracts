@@ -163,4 +163,7 @@ contract Setup {
         manifestation.setBoost(10);
         // sets: aura for Manifestation[0].
     }
+
+    function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }
+    function fromWei(uint amount) public pure returns (uint) { return amount / 1e18; }
 }

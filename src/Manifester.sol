@@ -141,7 +141,9 @@ contract Manifester is IManifester {
         address assetAddress = isNative ? wnativeAddress : usdcAddress;
 
         // ensures: depositAddress is never 0x.
-        require(depositAddress != address(0), 'depositAddress must be SoulSwap LP');
+        require(depositAddress != address(0), 'depositAddress must be SoulSwap LP.');
+        // ensures: reward token hasd 18 decimals.
+        require(ERC20(rewardAddress).decimals() == 18, 'reward must be 18 decimals.');
         // ensures: unique depositAddress-id mapping.
         require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
 
