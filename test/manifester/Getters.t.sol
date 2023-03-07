@@ -28,7 +28,7 @@ contract GettersTest is Test, Setup {
     }
 
     function testSplit() public {
-        uint _eShare = _getShare();
+        // uint _eShare = _getShare();
         uint sacrifice = 1_000;
         uint toDAO = 20 * 1E18;
         uint toEnchanter = 10 * 1E18;

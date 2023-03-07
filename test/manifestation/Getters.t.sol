@@ -48,24 +48,7 @@ contract GettersTest is Test, Setup {
         console.log('[+] feeRate reported accurately.');
     }
 
-    // [bonus] tests: bonus shares.
-    function testBonusAmount() public {
-        address _account = address(this);
-        uint _amount = toWei(500);
-        uint _boost = toWei(10);
-        // expectation: bonus = boost(10%) of amount(500) = 50.
-        uint _bonus = toWei(50);
-
-        uint boost = manifestation.boost();
-        uint bonus = manifestation.getBonusAmount(_account, _amount);
-        // console.log('deposited: %s', fromWei(_amount));
-        // console.log('boost: %s%', fromWei(boost));
-        // console.log('bonus: %s', fromWei(bonus));
-        assertEq(boost, _boost);
-        assertEq(bonus, _bonus);
-        console.log('[+] bonus amount reported accurately.');
-    }
-
+    // [rewardPeriod] tests: reward period accuracy.
     function testRewardPeriod() public {
         (uint startTime, uint endTime) = manifestation.getRewardPeriod();
         uint rewardPeriod = (endTime - startTime) / 1 days;
@@ -86,5 +69,20 @@ contract GettersTest is Test, Setup {
         // console.log('totalDeposit: %s', fromWei(totalDeposit));
         assertEq(totalDeposit, _totalDeposit);
         console.log('[+] total deposit reported accurately.');
+    }
+    
+    function testPendingRewards() public {
+        uint depositAmount = toWei(100);
+        _deposit(depositAmount);
+        // warps to: Day 2.
+        vm.warp(1 days);
+        // sets: daily rewards to just 1 less that actual (100).
+        uint dailyRewards = 99;
+        // uint _pendingRewards = toWei(300);
+        uint pendingRewards = fromWei(manifestation.getPendingRewards(address(this)));
+        // console.log('dailyRewards: %s', dailyRewards);
+        // console.log('pendingRewards: %s', pendingRewards);
+        assertEq(pendingRewards, dailyRewards);
+        console.log('[+] pending rewards (24H) reported accurately.');
     }
 }

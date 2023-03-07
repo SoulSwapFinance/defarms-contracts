@@ -17,7 +17,6 @@ contract Setup {
     Manifestation manifestation;
 
     // mock custom tokens.
-    MockToken AURA;
     MockToken DEPOSIT;
     MockToken REWARD;
 
@@ -40,7 +39,6 @@ contract Setup {
     address public REWARD_ADDRESS;
     address public DEPOSIT_ADDRESS;
 
-    address public AURA_ADDRESS;
     address public USDC_ADDRESS;
     address public WNATIVE_ADDRESS;
 
@@ -70,14 +68,6 @@ contract Setup {
         // initializes: Mock Factory
         factory = new MockFactory();
         FACTORY_ADDRESS = address(factory);
-
-        // initializes: Aura Token
-        AURA = new MockToken(
-            "AuraToken",
-            "AURA",
-            INITIAL_SUPPLY
-        );
-        AURA_ADDRESS = address(AURA);
 
         // initializes: Native Token
         WNATIVE = new MockToken(
@@ -125,7 +115,6 @@ contract Setup {
         // deploys: Manifester Contract
         manifester = new Manifester(
             FACTORY_ADDRESS,
-            AURA_ADDRESS,
             USDC_ADDRESS,
             WNATIVE_ADDRESS,
             NATIVE_ORACLE_ADDRESS,
@@ -158,9 +147,6 @@ contract Setup {
             DAILY_REWARD, // dailyRewards
             FEE_DAYS      // feeDays
         );
-
-        // sets: boost for Manifestation[0].
-        manifestation.setBoost(10);
         
         // sets: start time, end time
         manifestation.setDelay(0);

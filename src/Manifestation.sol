@@ -22,7 +22,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     IERC20 public depositToken;
     IERC20 public assetToken;
     IERC20 public rewardToken;
-    IERC20 public AURA;
 
     string public override name;
     string public override symbol;
@@ -36,7 +35,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     uint public rewardPerSecond;
     uint public accRewardPerShare;
     uint public lastRewardTime;
-    uint public boost;
 
     uint public override startTime;
     uint public override endTime;
@@ -92,13 +90,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
-    // [..] designates: soul access (for (rare) overrides).
+    // [.√.] designates: soul access (for (rare) overrides).
     modifier onlySOUL() {
         require(soulDAO == msg.sender, "onlySOUL: caller is not the soulDAO address");
         _;
     }
 
-    // [..] ensures: only the DAO address is the sender.
+    // [.√.] ensures: only the DAO address is the sender.
     modifier onlyDAO() {
         require(DAO == msg.sender, "onlyDAO: caller is not the DAO address");
         _;
@@ -113,7 +111,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     event Harvested(address indexed user, uint amount, uint timestamp);
     event Deposited(address indexed user, uint amount, uint timestamp);
     event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
-    event UpdatedMultiplier(uint multiplier);
 
     event Withdrawn(address indexed user, uint amount, uint feeAmount, uint timestamp);
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
@@ -132,8 +129,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         address _rewardAddress
         ) external onlyManifester {
         require(!isManifested, 'initialize once');
-        // sets: aura, wnative and usdc address using manifester as ref.
-        address auraAddress = manifester.auraAddress();
 
         creatorAddress = _creatorAddress;
         assetAddress = _assetAddress;
@@ -152,7 +147,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: from input data.
         assetToken = IERC20(assetAddress);
-        AURA = IERC20(auraAddress);
         depositToken = IERC20(depositAddress);
         rewardToken = IERC20(rewardAddress);
 
@@ -226,10 +220,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         }
 
         // returns: rewardShare for user minus the amount paid out (user).
-        uint bonusAmount = getBonusAmount(account, user.amount);
-        uint scaledAmount = user.amount + bonusAmount;
-        // calculates: using scaledAmount instead of user.amount.
-        pendingAmount = scaledAmount * _accRewardPerShare / 1e12 - user.rewardDebt;
+        pendingAmount = user.amount * _accRewardPerShare / 1e12 - user.rewardDebt;
 
         return pendingAmount;
     }
@@ -330,14 +321,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         start = startTime;
         end = endTime;
         return (start, end);
-    }
-
-    // [.√.] returns: bonus amount from a given (account, amount).
-    function getBonusAmount(address account, uint amount) public view returns(uint _bonusAmount) {
-        uint auraShare = AURA.balanceOf(account) / AURA.totalSupply();
-        // staked amount * auraShare (%) * boost (%) / 100%
-        _bonusAmount = fromWei(amount) * auraShare * boost / 100;
-        return _bonusAmount;
     }
 
     //////////////////////////////////////
@@ -586,19 +569,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(_soulDAO != address(0), 'cannot set to zero address');
         // updates: soulDAO adddress
         soulDAO = _soulDAO;
-    }
-
-    // [..] sets: AURA token.
-    function setAURA(address _auraAddress) external onlySOUL {
-        AURA = IERC20(_auraAddress);
-    }
-
-    // [..] sets: boost scale for AURA.
-    function setBoost(uint _boost) external onlySOUL {
-        require(_boost <= 100, 'cannot exceed 100%.');
-        boost = toWei(_boost);
-
-        emit UpdatedMultiplier(_boost);
     }
 
     ///////////////////////////////
