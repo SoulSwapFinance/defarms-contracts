@@ -325,7 +325,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return (feeAmount, withdrawable);
     }
 
-    // [..] returns: reward period (start, end).
+    // [.√.] returns: reward period (start, end).
     function getRewardPeriod() external view returns (uint start, uint end) {
         start = startTime;
         end = endTime;
@@ -481,6 +481,11 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [..] returns: key user info.
     function getUserInfo(address account) external view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
         Users storage user = userInfo[account];
+        return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
+    }
+
+    function getUserInfo() external view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
+        Users storage user = userInfo[msg.sender];
         return(user.amount, user.rewardDebt, user.withdrawTime, user.depositTime, user.timeDelta, user.deltaDays);
     }
 

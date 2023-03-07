@@ -12,6 +12,10 @@ contract GettersTest is Test, Setup {
     //     _price = manifestation.getPricePerToken();
     // }
 
+    function _deposit(uint _amount) internal {
+        manifestation.deposit(_amount);
+    }
+
     // [multiplier] tests: TVL accuracy.
     function testMultiplier() public {
         (uint _from, uint _to) = (100, 400);
@@ -23,7 +27,11 @@ contract GettersTest is Test, Setup {
     }
 
     // [TVL] tests: TVL accuracy.
-    function testTVL() public {}
+    // function testTVL() public {
+    //     _deposit(toWei(100));
+    //     uint TVL = manifestation.getTVL();
+    //     console.log('TVL: %s', TVL);
+    // }
 
     // [price] tests: pricePerToken accuracy.
     function testPricePerToken() public {}
@@ -66,5 +74,17 @@ contract GettersTest is Test, Setup {
         // console.log('rewardPeriod: %s', rewardPeriod);
         assertEq(rewardPeriod, DURA_DAYS);
         console.log('[+] set reward period to: %s days successfully.', rewardPeriod);
+    }
+
+    function testTotalDeposit() public {
+        _deposit(toWei(100));
+        // warps to: Day 2.
+        vm.warp(2 days);
+        _deposit(toWei(200));
+        uint _totalDeposit = toWei(300);
+        uint totalDeposit = manifestation.getTotalDeposit();
+        // console.log('totalDeposit: %s', fromWei(totalDeposit));
+        assertEq(totalDeposit, _totalDeposit);
+        console.log('[+] total deposit reported accurately.');
     }
 }

@@ -33,13 +33,14 @@ contract GettersTest is Test, Setup {
         uint toDAO = 20 * 1E18;
         uint toEnchanter = 10 * 1E18;
 
-        console.log('eShare: %s%', _eShare / 1E18);
+        // console.log('eShare: %s%', _eShare / 1E18);
         ( uint _toDAO, uint _toEnchanter ) = _getSplit(sacrifice);
-        console.log('DAO: %s REWARD', _toDAO / 1E18);
-        console.log('Enchanter: %s REWARD', _toEnchanter / 1E18);
+        // console.log('DAO: %s REWARD', _toDAO / 1E18);
+        // console.log('Enchanter: %s REWARD', _toEnchanter / 1E18);
 
         assertEq(_toDAO, toDAO);
         assertEq(_toEnchanter, toEnchanter);
+        console.log('[+] split reported accurately.');
     }
 
 }
