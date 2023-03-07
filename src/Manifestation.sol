@@ -72,7 +72,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     modifier isWithdrawable(uint amount) {
         require(startTime != 0, 'start time has not been set');
         require(amount > 0, 'cannot withdraw zero');
-        require(startTime >= block.timestamp, 'rewards have not yet begun');
+        require(block.timestamp >= startTime, 'rewards have not yet begun');
         require(isActivated, 'contract is currently paused');
         _;
     }
@@ -81,7 +81,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     modifier isDepositable(uint amount) {
         require(startTime != 0, 'start time has not been set');
         require(amount > 0, 'cannot deposit zero');
-        require(endTime < block.timestamp, 'the reward period has ended');
+        require(block.timestamp <= endTime, 'the reward period has ended');
         require(isActivated, 'contract is currently paused');
         _;
     }
@@ -134,13 +134,18 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(!isManifested, 'initialize once');
         // sets: aura, wnative and usdc address using manifester as ref.
         address auraAddress = manifester.auraAddress();
-        wnativeAddress = manifester.wnativeAddress();
-        usdcAddress = manifester.usdcAddress();
 
         creatorAddress = _creatorAddress;
         assetAddress = _assetAddress;
         depositAddress = _depositAddress;
         rewardAddress = _rewardAddress;
+
+        // sets: key data.
+        DAO = creatorAddress;
+        soulDAO = manifester.soulDAO();
+        wnativeAddress = manifester.wnativeAddress();
+        nativeSymbol = manifester.nativeSymbol();
+        usdcAddress = manifester.usdcAddress();
 
         require(assetAddress == wnativeAddress || assetAddress == usdcAddress, 'must pair with native or stable asset');
         isNativePair = assetAddress == wnativeAddress;
@@ -155,11 +160,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isManifested = true;
         isSettable = true;
 
-        // sets: key data.
-        soulDAO = manifester.soulDAO();
-        wnativeAddress = manifester.wnativeAddress();
-        nativeSymbol = manifester.nativeSymbol();
-        
         // sets: assetSymbol s.t. [if] isNativePair [then] "NATIVE" [else] "STABLE".
         assetSymbol = isNativePair ? "NATIVE" : "STABLE";
 
@@ -314,9 +314,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // [..] returns: feeAmount and with withdrawableAmount for a given amount
-    function getWithdrawable(
-        uint deltaDays, 
-        uint amount) public view returns (uint _feeAmount, uint _withdrawable) {
+    function getWithdrawable(uint deltaDays, uint amount) public view returns (uint _feeAmount, uint _withdrawable) {
         // gets: feeRate
         uint feeRate = fromWei(getFeeRate(deltaDays));
         // gets: feeAmount
@@ -334,7 +332,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return (start, end);
     }
 
-    // [..] todo: fix maths.
+    // [.√.] returns: bonus amount from a given (account, amount).
     function getBonusAmount(address account, uint amount) public view returns(uint _bonusAmount) {
         uint auraShare = AURA.balanceOf(account) / AURA.totalSupply();
         // staked amount * auraShare (%) * boost (%) / 100%
@@ -525,9 +523,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         uint start = block.timestamp + timeDelay;
         
         // ensures: start time has not yet past.
-        require(start > block.timestamp, 'start must be in the future');
+        require(start >= block.timestamp, 'start must be in the future');
 
         // calculates: duration (in seconds)
+        require(duraDays !=0, 'duration must be set');
         uint duration = duraDays * 1 days;
         
         // sets: startTime.
@@ -537,7 +536,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         endTime = start + duration;
     }
 
-    // [..] sets: DAO address (onlyDAO)
+    // [.√.] sets: DAO address (onlyDAO)
     function setDAO(address _DAO) external onlyDAO {
         require(_DAO != address(0), 'cannot set to zero address');
         // updates: DAO adddress
@@ -572,12 +571,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isActivated = enabled;
     }
 
-    // [..] overrides logoURI (onlySOUL).
+    // [.√.] overrides logoURI (onlySOUL).
     function setLogoURI(string memory _logoURI) external onlySOUL {
         logoURI = _logoURI;
     }
 
-    // [..] sets: soulDAO address (onlySOUL).
+    // [.√.] sets: soulDAO address (onlySOUL).
     function setSoulDAO(address _soulDAO) external onlySOUL {
         require(_soulDAO != address(0), 'cannot set to zero address');
         // updates: soulDAO adddress

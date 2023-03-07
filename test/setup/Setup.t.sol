@@ -161,7 +161,9 @@ contract Setup {
 
         // sets: boost for Manifestation[0].
         manifestation.setBoost(10);
-        // sets: aura for Manifestation[0].
+        
+        // sets: start time, end time
+        manifestation.setDelay(0);
     }
 
     function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }
