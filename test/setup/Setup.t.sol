@@ -146,7 +146,7 @@ contract Setup {
         REWARD.approve(MANIFESTER_ADDRESS, INITIAL_SUPPLY * 1E18);
 
         // initializes: Manifestation[0]
-        manifester.initializeManifestation(0);
+        // manifester.initializeManifestation(0);
         
         // sets Manifestation[0]: rewards and duration variables.
         manifester.launchManifestation(
