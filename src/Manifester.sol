@@ -10,7 +10,6 @@ contract Manifester is IManifester {
     ISoulSwapFactory public SoulSwapFactory;
     uint public totalManifestations;
     uint public totalEnchanters;
-    uint public eShare;
 
     // approved enchanters.
     struct Enchanters {
@@ -53,7 +52,7 @@ contract Manifester is IManifester {
     Manifestations[] public mInfo;
 
     // [ .. ] depositAddress, id.
-    mapping(address => mapping(uint => address)) public getManifestation; 
+    // mapping(address => mapping(uint => address)) public getManifestation; 
 
     event SummonedManifestation(
         uint indexed id,
@@ -67,7 +66,6 @@ contract Manifester is IManifester {
     event Paused(bool enabled);
     event Enchanted(uint id, address account, bool isActive);
     event UpdatedSacrifice(uint sacrifice);
-    event UpdatedEnchantShare(uint eShare);
     event UpdatedDAO(address dao);
 
     // [..] proxy for pausing contract.
@@ -98,7 +96,8 @@ contract Manifester is IManifester {
         string memory _nativeSymbol
     ) {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
-        bloodSacrifice = toWei(2);
+        // sets: sacrifice to 5%.
+        bloodSacrifice = toWei(5);
         nativeSymbol = _nativeSymbol;
 
         usdcAddress = _usdcAddress;
@@ -113,9 +112,6 @@ contract Manifester is IManifester {
 
         // increments [+]: totalEnchanters.
         totalEnchanters ++;
-
-        // sets: eShare to 1%.
-        updateEnchantShare(1);
     }
 
     // [.√.] creates: Manifestation
@@ -142,7 +138,7 @@ contract Manifester is IManifester {
         // ensures: reward token hasd 18 decimals.
         require(ERC20(rewardAddress).decimals() == 18, 'reward must be 18 decimals.');
         // ensures: unique depositAddress-id mapping.
-        require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
+        // require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
 
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
@@ -150,7 +146,7 @@ contract Manifester is IManifester {
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
 
         // populates: the getManifestation using the depositAddress and id.
-        getManifestation[depositAddress][id] = manifestation;
+        // getManifestation[depositAddress][id] = manifestation;
 
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
@@ -218,9 +214,6 @@ contract Manifester is IManifester {
     }
 
     function _launchManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward, uint reward) internal returns (bool) {
-        // gets: stored enchanters info by id.
-        Enchanters storage enchanter = eInfo[id];
-        address eAddress = enchanter.account;
 
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
@@ -241,7 +234,7 @@ contract Manifester is IManifester {
         require(ERC20(rewardAddress).balanceOf(msg.sender) >= total, 'insufficient balance to launch manifestation.');
 
         // transfers: eShare directly to enchanter.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, eAddress, toEnchanter);
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, manifestation.enchanterAddress, toEnchanter);
         
         // transfers: share directly to soulDAO.
         IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, toDAO);
@@ -263,9 +256,9 @@ contract Manifester is IManifester {
     }
 
     // [.√.] returns: sacrificial split between DAO & enchanter.
-    function getSplit(uint sacrifice) public view returns (uint toDAO, uint toEnchanter) {
-        toEnchanter = sacrifice * eShare / 100;
-        toDAO = sacrifice * bloodSacrifice / 100;
+    function getSplit(uint sacrifice) public pure returns (uint toDAO, uint toEnchanter) {
+        toEnchanter = sacrifice / 5; // 80%
+        toDAO = sacrifice - toEnchanter; // 20%
     }
 
     // [..] returns: total rewards.
@@ -368,14 +361,6 @@ contract Manifester is IManifester {
         soulDAO = _soulDAO;
 
         emit UpdatedDAO(_soulDAO);
-    }
-
-    // [..] updates: eShare amount.
-    function updateEnchantShare(uint _share) public onlySOUL {
-        require(_share <= 100, 'cannot exceed 100%.');
-        eShare = toWei(_share);
-
-        emit UpdatedEnchantShare(_share);
     }
 
     // [..] updates: sacrifice amount.

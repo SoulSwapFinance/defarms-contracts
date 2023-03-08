@@ -10,6 +10,7 @@
   "scripts": {
     "build": "forge build",
     "deploy": "forge script script/Manifester.s.sol:ManifesterScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
+    "deploy:mock": "forge script script/MockToken.s.sol:TokenScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
     "test": "forge test -v",
     "test:more": "forge test -vv",
     "test:most": "forge test -vvvvv",

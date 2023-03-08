@@ -50,7 +50,7 @@ contract Setup {
     uint public immutable DURA_DAYS = 90;
     uint public immutable FEE_DAYS = 14;
     uint public immutable DAILY_REWARD = 100;
-    uint public immutable INITIAL_SUPPLY = 1_000_000_000 * 1E18;
+    uint public immutable INITIAL_SUPPLY = 1_000_000_000;
     uint public immutable ONE_DAY = 1 days;
 
     // admins //
@@ -123,6 +123,14 @@ contract Setup {
         );
         MANIFESTER_ADDRESS = address(manifester);
 
+        uint totalRewards = manifester.getTotalRewards(DURA_DAYS, DAILY_REWARD);
+        uint sacrifice = manifester.getSacrifice(fromWei(totalRewards));
+        (uint toDAO, uint toEnchanter) = manifester.getSplit(sacrifice);
+        console.log('total rewards: %s', fromWei(totalRewards));
+        console.log('sacrifice: %s', fromWei(sacrifice));
+        console.log('toDAO: %s', fromWei(toDAO));
+        console.log('toEnchanter: %s', fromWei(toEnchanter));
+
         // creates: Manifestation[0]
         manifester.createManifestation(
             DEPOSIT_ADDRESS,      // address depositAddress,
@@ -155,7 +163,7 @@ contract Setup {
         manifestation.toggleActive(true);
 
         // approves: deposit token to Manifestation[0].
-        ERC20(DEPOSIT_ADDRESS).approve(MANIFESTATION_0_ADDRESS, INITIAL_SUPPLY * 1E18);
+        ERC20(DEPOSIT_ADDRESS).approve(MANIFESTATION_0_ADDRESS, toWei(INITIAL_SUPPLY));
     }
 
     function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }
