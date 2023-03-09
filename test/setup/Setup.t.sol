@@ -49,9 +49,9 @@ contract Setup {
 
     // admins //
     address payable[] internal admins;
-    address internal SOUL_DAO_ADDRESS; // = msg.sender;
-    address internal DAO_ADDRESS = msg.sender;
-    address internal CREATOR_ADDRESS = address(this); // 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8
+    address internal SOUL_DAO_ADDRESS = address(0xea);
+    address internal DAO_ADDRESS = address(0xee);
+    address internal CREATOR_ADDRESS = address(this);
 
     // addresses //
     address NATIVE_ORACLE_ADDRESS = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
@@ -175,6 +175,11 @@ contract Setup {
         // console.log('setting fee days...');
         manifestation.setFeeDays(14);
         // console.log('fee days set');
+
+        // sets: addresses for test clarity.
+        manifester.setSoulDAO(SOUL_DAO_ADDRESS);
+        manifestation.setSoulDAO(SOUL_DAO_ADDRESS);
+        manifestation.setDAO(DAO_ADDRESS);
 
     }
 

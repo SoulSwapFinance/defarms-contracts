@@ -419,10 +419,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // calculates: `feeAmount` as the `amount` requested minus `withdrawableAmount`.
         uint feeAmount = amount - withdrawableAmount;
 
-        // transfers: `feeAmount` --> owner.
-        rewardToken.safeTransfer(DAO, feeAmount);
+        // transfers: `feeAmount` --> DAO.
+        depositToken.safeTransfer(DAO, feeAmount);
         // transfers: withdrawableAmount amount --> user.
-        rewardToken.safeTransfer(address(msg.sender), withdrawableAmount);
+        depositToken.safeTransfer(address(msg.sender), withdrawableAmount);
 
         // updates: rewardDebt and withdrawTime (user)
         user.rewardDebt = user.amount * accRewardPerShare / 1e12;
@@ -444,6 +444,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // eliminates: user deposit `amount` & `rewardDebt`.
         user.amount = 0;
+        // since user.amount = 0 => rewardDebt = 0 * accRewardPerShare / 1e12 = 0;
         user.rewardDebt = 0;
 
         // updates: user `withdrawTime`.
@@ -455,7 +456,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     ///////////////////////////////
         /*/ VIEW FUNCTIONS /*/
     ///////////////////////////////
-    
+
     // [..] returns: key user info.
     function getUserInfo(address account) external view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
         Users storage user = userInfo[account];
@@ -570,6 +571,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     ///////////////////////////////
         /*/ HELPER FUNCTIONS /*/
     ///////////////////////////////
+
     // converts: uint to string (used when creating name)
     function uint2str(uint _i) internal pure returns (string memory str) {
         if (_i == 0) { return "0"; }

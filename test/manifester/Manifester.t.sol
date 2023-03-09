@@ -68,9 +68,11 @@ contract ManifesterTest is Test, Setup {
         console.log('[+] enchanter[0] address is valid.');
 
         // adds: new (unique) address to enchanters.
-        manifester.addEnchanter(address(0xee));
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifester.addEnchanter(address(0xbae));
+        vm.stopPrank();
         (address enchanter_1, ) = manifester.eInfo(1);
-        assertEq(enchanter_1, address(0xee));
+        assertEq(enchanter_1, address(0xbae));
         console.log('[+] adding unique enchanter[1] succeeded.');
 
         // reverts: when adding duplicate address.
@@ -81,6 +83,7 @@ contract ManifesterTest is Test, Setup {
 
     // [enchanters] tests: Enchanter Status Accuracy & Updates.
     function testEnchanterStatuses() public {
+        vm.startPrank(SOUL_DAO_ADDRESS);
         // adds: enchanter[1]
         manifester.addEnchanter(address(0xee));
 
@@ -110,6 +113,8 @@ contract ManifesterTest is Test, Setup {
         _updateEnchanterStatus(1, true);
         (, bool status_0_) = manifester.eInfo(0);
         (, bool status_1_) = manifester.eInfo(1);
+
+        vm.stopPrank();
 
         // expects: enchanters[0, 1] to be false.
         assertTrue(status_0_);

@@ -394,7 +394,7 @@ contract Manifester is IManifester {
     }
 
     // [..] updates: soulDAO address.
-    function updateDAO(address _soulDAO) external onlySOUL {
+    function setSoulDAO(address _soulDAO) external onlySOUL {
         soulDAO = _soulDAO;
 
         emit UpdatedDAO(_soulDAO);

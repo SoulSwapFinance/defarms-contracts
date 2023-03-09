@@ -25,14 +25,14 @@
     - [ .. ] immutable?
 
 ### **Addresses // Tokens**
-- [ .. ] **usdcAddress**
-- [ .. ] **wnativeAddress**
+- [ .√. ] **usdcAddress**
+- [ .√. ] **wnativeAddress**
 - [ .. ] **rewardAddress**
     - [ .. ] **rewardToken**
 - [ .. ] **depositAddress**
     - [ .. ] **depositToken**
-- [ .. ] **creatorAddress**
-- [ .. ] **manifester**
+- [ .√. ] **creatorAddress**
+- [ .√. ] **manifester**
 
 ### **Strings**
 - [ .. ] **name**
