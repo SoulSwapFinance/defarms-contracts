@@ -16,26 +16,26 @@ contract ManifesterTest is Test, Setup {
         uint id = 0;
 
         address mAddress = manifester.manifestations(id);
-        address assetAddress = address(WNATIVE);
-        address depositAddress = address(NATIVE_PAIR);
+        // address assetAddress = address(WNATIVE);
+        address depositAddress = address(DEPOSIT);
         address rewardAddress = address(REWARD);
         address enchanterAddress = address(this);
 
          // manifestation address //
-        (       address _mAddress         ,,,,,)       = manifester.mInfo(id);
+        (       address _mAddress         ,,,,)       = manifester.mInfo(id);
          // asset address //
-        (,      address _assetAddress     ,,,,)        = manifester.mInfo(id);
+        // (,      address _assetAddress     ,,,,)        = manifester.mInfo(id);
         // deposit address //
-        (,,     address _depositAddress   ,,,)         = manifester.mInfo(id);
+        (,     address _depositAddress   ,,,)         = manifester.mInfo(id);
         // reward address //
-        (,,,    address _rewardAddress    ,,)          = manifester.mInfo(id);
+        (,,    address _rewardAddress    ,,)          = manifester.mInfo(id);
         // creator address //
-        (,,,,   address _creatorAddress   ,)           = manifester.mInfo(id);
+        (,,,   address _creatorAddress   ,)           = manifester.mInfo(id);
         // enchanter address //
-        (,,,,,  address _enchanterAddress )            = manifester.mInfo(id);
+        (,,,,  address _enchanterAddress )            = manifester.mInfo(id);
 
         // verifies: assetAddress
-        assertEq(_assetAddress, assetAddress, "ok");
+        // assertEq(_assetAddress, assetAddress, "ok");
         // console.log("[+] assetAddress: %s", assetAddress);
 
         // verifies: depositAddress
@@ -57,24 +57,6 @@ contract ManifesterTest is Test, Setup {
         // verifies: enchanterAddress
         assertEq(_enchanterAddress, enchanterAddress, "ok");
         // console.log("[+] enchanterAddress: %s", enchanterAddress);
-    }
-
-    // [NATIVE_PAIR] test: Native Pair
-    function testPairs() public {
-        bool _isNative_Native = NATIVE_PAIR.isNative();
-        bool _isNative_Stable = STABLE_PAIR.isNative();
-        
-        bool isNative_Native = true;
-        bool isNative_Stable = false;
-
-        assertEq(_isNative_Native, isNative_Native, "ok");
-        assertEq(_isNative_Stable, isNative_Stable, "ok");
-
-        // console.log("[+] isNative(NATIVE_PAIR): %s", NATIVE_PAIR.isNative());
-        // console.log("[+] isNative(STABLE_PAIR): %s", STABLE_PAIR.isNative());
-
-        // console.log("[+] NATIVE_PAIR: %s", address(NATIVE_PAIR));
-        // console.log("[+] STABLE_PAIR: %s", address(STABLE_PAIR));
     }
 
     // [enchanters] tests: Enchanter Address Accuracy & Checks.

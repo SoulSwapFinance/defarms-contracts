@@ -4,7 +4,7 @@ pragma solidity >=0.8.13;
 import "src/Manifestation.sol";
 import "src/Manifester.sol";
 import "src/mocks/MockToken.sol";
-import "src/mocks/MockPair.sol";
+// import "src/mocks/MockPair.sol";
 import "src/mocks/MockFactory.sol";
 
 import { stdStorage, StdStorage, Test, Vm } from "forge-std/Test.sol";
@@ -24,10 +24,6 @@ contract Setup {
     MockToken USDC;
     MockToken WNATIVE;
 
-    // mock pairs.
-    MockPair NATIVE_PAIR;
-    MockPair STABLE_PAIR;
-
     MockFactory public factory;
     Utilities internal utils;
 
@@ -36,14 +32,12 @@ contract Setup {
     address public MANIFESTATION_0_ADDRESS;
 
     address public FACTORY_ADDRESS;
+
     address public REWARD_ADDRESS;
     address public DEPOSIT_ADDRESS;
 
     address public USDC_ADDRESS;
     address public WNATIVE_ADDRESS;
-
-    address public NATIVE_PAIR_ADDRESS;
-    address public STABLE_PAIR_ADDRESS;
 
     // numeric constants //
     uint public immutable ORACLE_DECIMALS = 8;
@@ -69,6 +63,7 @@ contract Setup {
         factory = new MockFactory();
         FACTORY_ADDRESS = address(factory);
 
+
         // initializes: Native Token
         WNATIVE = new MockToken(
             "Wrapped Fantom",
@@ -93,24 +88,13 @@ contract Setup {
         );
         REWARD_ADDRESS = address(REWARD);
 
-        NATIVE_PAIR = new MockPair(
-            FACTORY_ADDRESS,                  // factoryAddress
-            address(REWARD),             // token0Address
-            address(WNATIVE),            // token1Address
-            address(WNATIVE),            // wnativeAddress
-            INITIAL_SUPPLY                    // totalSupply
+        // initializes: Reward Token
+        DEPOSIT = new MockToken(
+            "DepositToken",
+            "DEPOSIT",
+            INITIAL_SUPPLY                     // totalSupply
         );
-        NATIVE_PAIR_ADDRESS = address(NATIVE_PAIR);
-        DEPOSIT_ADDRESS = address(NATIVE_PAIR); 
-
-        STABLE_PAIR = new MockPair(
-            FACTORY_ADDRESS,                  // factoryAddress
-            address(REWARD),             // token0Address
-            address(USDC),               // token1Address
-            address(WNATIVE),            // wnativeAddress
-            INITIAL_SUPPLY                    // totalSupply
-        );
-        STABLE_PAIR_ADDRESS = address(STABLE_PAIR);
+        DEPOSIT_ADDRESS = address(DEPOSIT);
 
         // deploys: Manifester Contract
         manifester = new Manifester(
@@ -123,47 +107,76 @@ contract Setup {
         );
         MANIFESTER_ADDRESS = address(manifester);
 
-        uint totalRewards = manifester.getTotalRewards(DURA_DAYS, DAILY_REWARD);
-        uint sacrifice = manifester.getSacrifice(fromWei(totalRewards));
-        (uint toDAO, uint toEnchanter) = manifester.getSplit(sacrifice);
-        console.log('total rewards: %s', fromWei(totalRewards));
-        console.log('sacrifice: %s', fromWei(sacrifice));
-        console.log('toDAO: %s', fromWei(toDAO));
-        console.log('toEnchanter: %s', fromWei(toEnchanter));
+        // uint totalRewards = manifester.getTotalRewards(DURA_DAYS, DAILY_REWARD);
+        // uint sacrifice = manifester.getSacrifice(fromWei(totalRewards));
+        // (uint toDAO, uint toEnchanter) = manifester.getSplit(sacrifice);
+        // console.log('total rewards: %s', fromWei(totalRewards));
+        // console.log('sacrifice: %s', fromWei(sacrifice));
+        // console.log('toDAO: %s', fromWei(toDAO));
+        // console.log('toEnchanter: %s', fromWei(toEnchanter));
 
-        // creates: Manifestation[0]
-        manifester.createManifestation(
-            DEPOSIT_ADDRESS,      // address depositAddress,
-            REWARD_ADDRESS,       // address rewardAddress, 
-            0,                    // address rewardAddress, 
-            true                  // bool isNative
-        );
-
-        MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
-        manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
+        // address manifestationAddress = manifester.generateManifestation(DEPOSIT_ADDRESS, 0);
+        // console.log('manifestation address: %s', manifestationAddress);
 
         // approves: manifestation to transferFrom REWARD token.
-        REWARD.approve(MANIFESTER_ADDRESS, INITIAL_SUPPLY * 1E18);
+        REWARD.approve(MANIFESTER_ADDRESS, toWei(INITIAL_SUPPLY));
+        // console.log('manifesting...');
 
-        // initializes: Manifestation[0]
-        // manifester.initializeManifestation(0);
-        
-        // sets Manifestation[0]: rewards and duration variables.
-        manifester.launchManifestation(
-            0,            // id
-            DURA_DAYS,    // duraDays
-            DAILY_REWARD, // dailyRewards
-            FEE_DAYS      // feeDays
+        // creates: Manifestation[0]
+        manifester.createManifestationOverride(
+            DEPOSIT_ADDRESS,      // address depositAddress,
+            REWARD_ADDRESS,       // uint enchanterId, 
+            0,                    // address rewardAddress, 
+            // true,                  // bool isNative
+            DURA_DAYS,
+            // FEE_DAYS,
+            DAILY_REWARD
         );
+
+        console.log('manifestation created.');
+
+        MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
+        console.log('manifestation[0] address: %s', MANIFESTATION_0_ADDRESS);
+        
+        manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
+
+        // todo enables: deposits (for test-purposes only).
+        // console.log('deposit address: %s', DEPOSIT_ADDRESS);
+        // console.log('this address: %s', address(this));
+        // console.log('soulDAO address: %s', manifester.soulDAO());
+        // console.log('manifestation[0] address created: %s', address(manifestation));
+        // console.log('soulDAO [M0] address: %s', manifestation.soulDAO());
+        // console.log('updating deposit address...');
+        // manifestation.setDepositAddress(DEPOSIT_ADDRESS);
+        // console.log('updated deposit address');
+        // console.log('updating deposit address...');
+        // manifester.updateDepositAddress(0, DEPOSIT_ADDRESS);
+        // console.log('updated deposit address: %s', DEPOSIT_ADDRESS);
+
+        // manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
+        // console.log('manifestation: %s', manifestation);
         
         // sets: start time, end time
+        // console.log('setting delay...');
         manifestation.setDelay(0);
+        // console.log('[+] delay set successfully.');
 
         // unpauses: Manifestation[0].
+        // console.log('toggling active...');
+        // console.log('dao [m0] %s', manifestation.DAO());
         manifestation.toggleActive(true);
+        // console.log('[+] active set successfully.');
 
         // approves: deposit token to Manifestation[0].
-        ERC20(DEPOSIT_ADDRESS).approve(MANIFESTATION_0_ADDRESS, toWei(INITIAL_SUPPLY));
+        // console.log('approving deposit...');
+        DEPOSIT.approve(MANIFESTATION_0_ADDRESS, toWei(INITIAL_SUPPLY));
+        // console.log('deposit approved');
+        
+        // sets: feeRate to 14%.
+        // console.log('setting fee days...');
+        manifestation.setFeeDays(14);
+        // console.log('fee days set');
+
     }
 
     function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }

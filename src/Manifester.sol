@@ -21,7 +21,7 @@ contract Manifester is IManifester {
     Enchanters[] public eInfo;
 
     address[] public manifestations;
-    address[] public daos;
+    address[] public creators;
     // checks: whether already an enchanter.
     mapping(address => bool) public enchanted; 
 
@@ -41,7 +41,7 @@ contract Manifester is IManifester {
     // [..] creates: Manifestations struct (strictly immutable variables).
     struct Manifestations {
         address mAddress;
-        address assetAddress;
+        // address assetAddress;
         address depositAddress;
         address rewardAddress;
         address creatorAddress;
@@ -51,12 +51,9 @@ contract Manifester is IManifester {
     // [.√.] manifestation info
     Manifestations[] public mInfo;
 
-    // [ .. ] depositAddress, id.
-    // mapping(address => mapping(uint => address)) public getManifestation; 
-
     event SummonedManifestation(
         uint indexed id,
-        address indexed depositAddress, 
+        address depositAddress, 
         address rewardAddress, 
         address creatorAddress,
         address enchanterAddress,
@@ -80,13 +77,13 @@ contract Manifester is IManifester {
         _;
     }
 
-    // [..] restricts: only existing manifestations.
+    // [..] restricts: only existing manifestations and enchanters.
     modifier exists(uint id, uint total) {
         require(id <= total, 'does not exist.');
         _;
     }
 
-    // [..] sets: key variables.
+    // [.√.] sets: key variables.
     constructor(
         address _factoryAddress,
         address _usdcAddress,
@@ -116,43 +113,44 @@ contract Manifester is IManifester {
 
     // [.√.] creates: Manifestation
     function createManifestation(
-        address depositAddress,
         address rewardAddress,
         uint enchanterId,
-        bool isNative
-        // address daoAddress
+        uint duraDays,
+        uint dailyReward
     ) external whileActive exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
         id = manifestations.length;
+
+        // creates: pair if doesn't exist.
+        if (SoulSwapFactory.getPair(rewardAddress, wnativeAddress) == address(0)) {
+            SoulSwapFactory.createPair(rewardAddress, wnativeAddress);
+        }
+
+        // gets: depositAddress.
+        address depositAddress = SoulSwapFactory.getPair(rewardAddress, wnativeAddress);
+
+        // ensures: depositAddress is never 0x.
+        require(depositAddress != address(0), 'depositAddress must be SoulSwap LP.');
+
+        // ensures: reward token has 18 decimals.
+        require(ERC20(rewardAddress).decimals() == 18, 'reward must be 18 decimals.');
+
         // gets: stored enchanter info
         Enchanters memory enchanter = eInfo[enchanterId];
 
         // sets: enchanterAddress.
         address enchanterAddress = enchanter.account;
 
-        // sets: assetAddress.
-        address assetAddress = isNative ? wnativeAddress : usdcAddress;
-
-        // ensures: depositAddress is never 0x.
-        require(depositAddress != address(0), 'depositAddress must be SoulSwap LP.');
-        // ensures: reward token hasd 18 decimals.
-        require(ERC20(rewardAddress).decimals() == 18, 'reward must be 18 decimals.');
-        // ensures: unique depositAddress-id mapping.
-        // require(getManifestation[depositAddress][id] == address(0), 'reward already exists'); // single check is sufficient
-
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
 
-        // populates: the getManifestation using the depositAddress and id.
-        // getManifestation[depositAddress][id] = manifestation;
-
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
 
-        // stores: dao to the daos[] array
-        daos.push(msg.sender);
+        // stores: creator to the creators[] array
+        creators.push(msg.sender);
 
         // increments: the total number of manifestations
         totalManifestations++;
@@ -160,68 +158,104 @@ contract Manifester is IManifester {
         // appends and populates: a new Manifestations struct (instance).
         mInfo.push(Manifestations({
             mAddress: manifestations[id],
-            assetAddress: assetAddress,
             depositAddress: depositAddress,
             rewardAddress: rewardAddress,
             creatorAddress: msg.sender,
             enchanterAddress: enchanterAddress
         }));
 
-        _initializeManifestation(id);
+        _initializeManifestation(id, duraDays, 0, dailyReward);
     
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
 
+    // [.√.] creates: Manifestation
+    function createManifestationOverride(
+        address depositAddress,
+        address rewardAddress,
+        uint enchanterId,
+        uint duraDays,
+        uint dailyReward
+    ) external whileActive onlySOUL exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
+        // creates: id reference.
+        id = manifestations.length;
+
+         // ensures: depositAddress is never 0x.
+        require(depositAddress != address(0), 'depositAddress must be SoulSwap LP.');
+
+        // ensures: reward token has 18 decimals.
+        require(ERC20(rewardAddress).decimals() == 18, 'reward must be 18 decimals.');
+
+        // gets: stored enchanter info
+        Enchanters memory enchanter = eInfo[enchanterId];
+
+        // sets: enchanterAddress.
+        address enchanterAddress = enchanter.account;
+
+        // generates: creation code, salt, then assembles a create2Address for the new manifestation.
+        bytes memory bytecode = type(Manifestation).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
+        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
+
+        // stores manifestation to the manifestations[] array
+        manifestations.push(manifestation);
+
+        // stores: creator to the creators[] array
+        creators.push(msg.sender);
+
+        // increments: the total number of manifestations
+        totalManifestations++;
+
+        // appends and populates: a new Manifestations struct (instance).
+        mInfo.push(Manifestations({
+            mAddress: manifestations[id],
+            depositAddress: depositAddress,
+            rewardAddress: rewardAddress,
+            creatorAddress: msg.sender,
+            enchanterAddress: enchanterAddress
+        }));
+
+        _initializeManifestation(id, duraDays, 0, dailyReward);
+    
+        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
+    }
+
+    function generateManifestation(address depositAddress, uint id) external returns (address manifestation) {
+        // generates: creation code, salt, then assembles a create2Address for the new manifestation.
+        bytes memory bytecode = type(Manifestation).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
+        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
+    }
+
     // [.√.] initializes: manifestation
-    function _initializeManifestation(uint id) internal exists(id, totalManifestations) {
+    function _initializeManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward) internal exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
 
         // gets: associated variables by id.
         address mAddress = manifestations[id];
-        address daoAddress = daos[id];
         address rewardAddress = manifestation.rewardAddress;
-        address assetAddress = manifestation.assetAddress;
         address depositAddress = manifestation.depositAddress;
-
-        // requires: sender is the DAO
-        require(msg.sender == daoAddress, 'only the DAO may initialize');
 
         // creates: new manifestation based off of the inputs, then stores as an array.
         Manifestation(mAddress).manifest(
-            daoAddress,
-            assetAddress,
+            msg.sender,
+            wnativeAddress, // assetAddress,
             depositAddress,
             rewardAddress
         );
+
+        _launchManifestation(id, duraDays, feeDays, dailyReward);
     }
 
-    // [.√.] launches: Manifestation.
-    function launchManifestation(
-        uint id,
-        uint duraDays,
-        uint dailyReward,
-        uint feeDays
-    ) external exists(id, totalManifestations) {
+    function _launchManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward) internal returns (bool) {
+
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
-
-        // checks: the sender is the creator of the manifestation.
-        require(msg.sender == manifestation.creatorAddress, 'only the creator may launch.');
-
+        
         // gets: distribution amounts.
         uint reward = getTotalRewards(duraDays, dailyReward);
-
-        require(_launch(id, duraDays, feeDays, dailyReward, reward), 'launch failed.');
-    }
-
-    function _launch(uint id, uint duraDays, uint feeDays, uint dailyReward, uint reward) internal returns (bool) {
-
-        // gets: stored manifestation info by id.
-        Manifestations storage manifestation = mInfo[id];
-
         uint sacrifice = getSacrifice(fromWei(reward));
-
         (uint toDAO, uint toEnchanter) = getSplit(sacrifice);
 
         address rewardAddress = manifestation.rewardAddress;

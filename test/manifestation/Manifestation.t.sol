@@ -52,21 +52,13 @@ contract ManifestationTest is Test, Setup {
 
     // [deposit]: Deposit 100 tokens.
     function testDeposit() public {
+        // address depositToken = manifestation.depositAddress();
+        // console.log('my deposit bal: %s', fromWei(DEPOSIT.balanceOf(address(this))));
+        // console.log('deposit address: %s', depositToken);
         uint _amount = toWei(100);
+        // uint depositedAmount = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
         _deposit(_amount);
-    }
-
-    // [userInfo]
-    function testUserInfo() public {
-        uint _amount = toWei(100);
-        _deposit(_amount);
-
-        // moves (warps): to timestamp 100.
-        vm.warp(86_402);
-        // (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo();
-        (uint amount, , , , ,) = _userInfo(address(this));
-        assertEq(amount, _amount);
-        console.log('[+] deposited amount reported accurately.');
+        // console.log('deposited amount: %s', depositedAmount);
     }
 
     function testHarvest() public {
@@ -86,4 +78,19 @@ contract ManifestationTest is Test, Setup {
         console.log("[+] harvested accurate amount.");
 
     }
+
+    // [userInfo]
+    function testUserInfo() public {
+        uint _amount = toWei(100);
+        _deposit(_amount);
+
+        // moves (warps): to timestamp 100.
+        vm.warp(86_402);
+        // (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo();
+        (uint amount, , , , ,) = _userInfo(address(this));
+        assertEq(amount, _amount);
+        console.log('[+] deposited amount reported accurately.');
+    }
+
+
 }

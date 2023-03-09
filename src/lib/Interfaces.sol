@@ -28,24 +28,6 @@ interface IERC20Metadata is IERC20 {
     function decimals() external view returns (uint8);
 }
 
-interface ISoulSwapFactory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
-    event SetFeeTo(address indexed user, address indexed _feeTo);
-    event SetMigrator(address indexed user, address indexed _migrator);
-    event FeeToSetter(address indexed user, address indexed feeToSetter);
-
-    function feeTo() external view returns (address _feeTo);
-    function feeToSetter() external view returns (address _fee);
-    function migrator() external view returns (address _migrator);
-
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
-
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-    function setMigrator(address) external;
-    function setFeeTo(address) external;
-    function setFeeToSetter(address) external;
-}
-
 interface IManifestation {
     function name() external returns (string memory);
     function symbol() external returns (string memory);
@@ -76,9 +58,52 @@ interface IOracle {
   function latestTimestamp() external view returns (uint256);
 }
 
-// File: contracts/interfaces/ISoulSwapPair.sol
+// File: contracts/interfaces/ISoulSwapFactory.sol
+
+interface ISoulSwapFactory {
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    event SetFeeTo(address indexed user, address indexed _feeTo);
+    event SetMigrator(address indexed user, address indexed _migrator);
+    event FeeToSetter(address indexed user, address indexed feeToSetter);
+
+    function feeTo() external view returns (address _feeTo);
+    function feeToSetter() external view returns (address _fee);
+    function migrator() external view returns (address _migrator);
+
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function setMigrator(address) external;
+    function setFeeTo(address) external;
+    function setFeeToSetter(address) external;
+}
+
+// File: contracts/interfaces/ISoulSwapERC20.sol
 
 pragma solidity >=0.5.0;
+
+interface ISoulSwapERC20 {
+    // event Approval(address indexed owner, address indexed spender, uint value);
+    // event Transfer(address indexed from, address indexed to, uint value);
+
+    function name() external pure returns (string memory);
+    function symbol() external pure returns (string memory);
+    function decimals() external pure returns (uint8);
+    function totalSupply() external view returns (uint);
+    function balanceOf(address owner) external view returns (uint);
+    function allowance(address owner, address spender) external view returns (uint);
+
+    function approve(address spender, uint value) external returns (bool);
+    function transfer(address to, uint value) external returns (bool);
+    function transferFrom(address from, address to, uint value) external returns (bool);
+
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
+    function PERMIT_TYPEHASH() external pure returns (bytes32);
+    function nonces(address owner) external view returns (uint);
+
+    function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
+}
+
 
 interface ISoulSwapPair {
     event Approval(address indexed owner, address indexed spender, uint value);
