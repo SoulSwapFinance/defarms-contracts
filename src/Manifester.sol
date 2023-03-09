@@ -393,7 +393,7 @@ contract Manifester is IManifester {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
     }
 
-    // [..] updates: soulDAO address.
+    // [.√.] updates: soulDAO address.
     function setSoulDAO(address _soulDAO) external onlySOUL {
         soulDAO = _soulDAO;
 

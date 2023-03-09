@@ -4,7 +4,7 @@ pragma solidity >=0.8.13;
 import "../setup/Setup.t.sol";
 
 contract UpdatesTest is Test, Setup {
-
+    // [toggleActive]
     function testToggleActive() public {
         bool isActive_0 = manifestation.isActivated();
         // console.log('isActive(0)', isActive_0);
@@ -24,6 +24,22 @@ contract UpdatesTest is Test, Setup {
         manifestation.toggleActive(!isActive_0);
         vm.stopPrank();
         console.log('[+] active state failed to update when not DAO (as expected).');
+    }
+
+    // [toggleSettable]
+    function testToggleSettable() public {
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.toggleSettable(false);
+        vm.stopPrank();
+        vm.startPrank(DAO_ADDRESS);
+        vm.expectRevert();
+        manifestation.toggleEmergency(true);
+        vm.expectRevert();
+        manifestation.toggleActive(false);
+        vm.expectRevert();
+        manifestation.setFeeDays(12);
+        vm.stopPrank();
+        console.log('[+] reverts when DAO transacts on non-settable functions (as expected).');
     }
 
     function testSetDAO() public {
@@ -85,4 +101,6 @@ contract UpdatesTest is Test, Setup {
         vm.stopPrank();
         console.log('[+] reverts when non-DAO updates fee days (as expected).');
     }
+
+
 }

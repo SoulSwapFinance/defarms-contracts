@@ -27,17 +27,16 @@
 ### **Addresses // Tokens**
 - [ .√. ] **usdcAddress**
 - [ .√. ] **wnativeAddress**
-- [ .. ] **rewardAddress**
-    - [ .. ] **rewardToken**
-- [ .. ] **depositAddress**
-    - [ .. ] **depositToken**
+- [ .√. ] **rewardAddress**
+    - [ .√. ] **rewardToken**
+- [ .∫. ] **depositAddress**
+    - [ .∫. ] **depositToken**
 - [ .√. ] **creatorAddress**
 - [ .√. ] **manifester**
 
 ### **Strings**
-- [ .. ] **name**
-- [ .. ] **symbol**
-- [ .. ] **assetSymbol**
+- [ .√. ] **name**
+- [ .√. ] **symbol**
 - [ .. ] **nativeSymbol**
     - [ .. ] meaningful?
 
@@ -46,26 +45,26 @@
 ### **Numeric**
 - [ .. ] **lastRewardTime**
 - [ .. ] **accRewardPerShare**
-- [ .. ] **dailyReward**
+- [ .√. ] **dailyReward**
 - [ .. ] **totalRewards**
 - [ .. ] **rewardPerSecond**
-- [ .. ] **feeDays**
+- [ .√. ] **feeDays**
 
 ### **Strings**
-- [ .. ] **logoURI**
-    - [ .. ] **setLogoURI**
-        - [ .. ] **check**: restricted access (onlyDAO)
-        - [ .. ] **check**: logoURI update
+- [ .√. ] **logoURI**
+    - [ .√. ] **setLogoURI**
+        - [ .√. ] **check**: restricted access (onlyDAO)
+        - [ .√. ] **check**: logoURI update
 ### **Booleans**
-- [ .. ] **isSettable**
-    - [ .. ] **toggleSettable(true)**
+- [ .√. ] **isSettable**
+    - [ .√. ] **toggleSettable(true)**
         - [insert disabled functions here...]
-    - [ .. ] **toggleSettable(false)**
+    - [ .√. ] **toggleSettable(false)**
         - [insert enabled functions here...]
 - [ .. ] **isEmergency**
     - [ .. ] **toggleEmergency(true)**
         - [insert disabled functions here...]
-    - [ .. ] toggleEmergency(false)
+    - [ .. ] **toggleEmergency(false)**
         - [insert enabled functions here...]
 - [ .. ] **isActivated**
     - [ .. ] **toggleActive(true)**
@@ -74,12 +73,12 @@
         - [insert enabled functions here...]
 
 ### **Addresses**
-- [ .. ] **DAO**
-    - [ .. ] **setDAO()**
-        - [ .. ] verify update
-- [ .. ] **soulDAO**
-    - [ .. ] **setSoulDAO()**
-        - [ .. ] verify update
+- [ .√. ] **DAO**
+    - [ .√. ] **setDAO()**
+        - [ .√. ] verify update
+- [ .√. ] **soulDAO**
+    - [ .√. ] **setSoulDAO()**
+        - [ .√. ] verify update
 
 ## **Modifiers**
 
