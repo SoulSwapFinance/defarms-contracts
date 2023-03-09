@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 import '../lib/Libraries.sol';
-
-pragma solidity >=0.5.0;
+pragma solidity >=0.8.0;
 
 contract SoulSwapERC20 is ISoulSwapERC20 {
     using SafeMath for uint;
