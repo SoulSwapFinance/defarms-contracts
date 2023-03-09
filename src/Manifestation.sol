@@ -383,7 +383,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Deposited(msg.sender, amount, block.timestamp);
     }
 
-    // [..] withdraws: deposited tokens.
+    // [.√.] withdraws: deposited tokens.
     function withdraw(uint amount) external nonReentrant isWithdrawable(amount) {
         // gets: stored data for the account.
         Users storage user = userInfo[msg.sender];
@@ -395,6 +395,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // gets: pending rewards as determined by pendingSoul.
         uint pendingReward = user.amount * accRewardPerShare / 1e12 - user.rewardDebt;
+        
         // [if] rewards are pending, [then] send rewards to user.
         if(pendingReward > 0) { 
             // ensures: only a full payout is made, else fails.
@@ -419,14 +420,14 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // calculates: `feeAmount` as the `amount` requested minus `withdrawableAmount`.
         uint feeAmount = amount - withdrawableAmount;
 
+        // updates: rewardDebt and withdrawTime (user)
+        user.rewardDebt = user.amount * accRewardPerShare / 1e12;
+        user.withdrawTime = block.timestamp;
+
         // transfers: `feeAmount` --> DAO.
         depositToken.safeTransfer(DAO, feeAmount);
         // transfers: withdrawableAmount amount --> user.
         depositToken.safeTransfer(address(msg.sender), withdrawableAmount);
-
-        // updates: rewardDebt and withdrawTime (user)
-        user.rewardDebt = user.amount * accRewardPerShare / 1e12;
-        user.withdrawTime = block.timestamp;
 
         emit Withdrawn(msg.sender, amount, feeAmount, block.timestamp);
     }
