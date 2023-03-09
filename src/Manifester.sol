@@ -212,10 +212,10 @@ contract Manifester is IManifester {
         // gets: distribution amounts.
         uint reward = getTotalRewards(duraDays, dailyReward);
 
-        require(_launchManifestation(id, duraDays, feeDays, dailyReward, reward), 'launch failed.');
+        require(_launch(id, duraDays, feeDays, dailyReward, reward), 'launch failed.');
     }
 
-    function _launchManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward, uint reward) internal returns (bool) {
+    function _launch(uint id, uint duraDays, uint feeDays, uint dailyReward, uint reward) internal returns (bool) {
 
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
