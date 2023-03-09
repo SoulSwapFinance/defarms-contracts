@@ -26,7 +26,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     string public override name;
     string public override symbol;
     string public override logoURI;
-    string public override assetSymbol;
+    // string public override assetSymbol;
     
     uint public duraDays;
     uint public feeDays;
@@ -116,13 +116,14 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
     event FeeDaysUpdated(uint feeDays);
 
-    // [..] sets the manifester at creation //
+    // [.√.] sets the manifester at creation //
     constructor() {
         manifester = IManifester(msg.sender);
     }
 
     // [.√.] initializes: manifestation by the manifester (at creation).
     function manifest(
+        uint _id,
         address _creatorAddress,
         address _assetAddress,
         address _depositAddress,
@@ -142,9 +143,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         nativeSymbol = manifester.nativeSymbol();
         usdcAddress = manifester.usdcAddress();
 
-        require(assetAddress == wnativeAddress || assetAddress == usdcAddress, 'must pair with native or stable asset');
-        isNativePair = assetAddress == wnativeAddress;
-
         // sets: from input data.
         assetToken = IERC20(assetAddress);
         depositToken = IERC20(depositAddress);
@@ -154,12 +152,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isManifested = true;
         isSettable = true;
 
-        // sets: assetSymbol s.t. [if] isNativePair [then] "NATIVE" [else] "STABLE".
-        assetSymbol = isNativePair ? "NATIVE" : "STABLE";
-
         // constructs: name that corresponds to the rewardToken.
-        name = string(abi.encodePacked('Manifest: ', ERC20(rewardAddress).name()));
-        symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol(), '-', assetSymbol, ' MP'));
+        name = string(abi.encodePacked('[', uint2str(_id), '] ', ERC20(rewardAddress).name(), ' Farm'));
+        symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol()));
 
         emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
@@ -241,7 +236,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         uint assetPrice = 
             isNativePair ? uint(IManifester(manifester).getNativePrice()) 
-                : 1 * 1E8;
+                : toWei(1);
 
         uint assetBalance = 
             isNativePair ? WNATIVE.balanceOf(address(depositToken)) 
@@ -481,7 +476,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isActivated = enabled;
     }
 
-    // [..] updates: feeDays (onlyDAO, whileSettable) todo
+    // [..] updates: feeDays (onlyDAO, whileSettable)
     function setFeeDays(uint _feeDays) external onlyDAO whileSettable {
         // gets: current fee days & ensures distinction (pool)
         require(feeDays != toWei(_feeDays), 'no change requested');
@@ -566,9 +561,33 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         soulDAO = _soulDAO;
     }
 
+    // [..] sets: native or stable (onlySOUL, when override is needed).
+    function setNativePair(bool enabled) external onlySOUL {
+        isNativePair = enabled;
+        assetAddress = enabled ? wnativeAddress : usdcAddress;
+    }
+
     ///////////////////////////////
         /*/ HELPER FUNCTIONS /*/
     ///////////////////////////////
+    // converts: uint to string (used when creating name)
+    function uint2str(uint _i) internal pure returns (string memory str) {
+        if (_i == 0) { return "0"; }
+        uint j = _i;
+        uint length;
+        while (j != 0) {
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        uint k = length;
+        j = _i;
+        while (j != 0) {
+            bstr[--k] = bytes1(uint8(48 + j % 10));
+            j /= 10;
+        }
+        str = string(bstr);
+    }
 
     function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }
     function fromWei(uint amount) public pure returns (uint) { return amount / 1e18; }

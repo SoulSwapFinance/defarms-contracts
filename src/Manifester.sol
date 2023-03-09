@@ -239,8 +239,9 @@ contract Manifester is IManifester {
 
         // creates: new manifestation based off of the inputs, then stores as an array.
         Manifestation(mAddress).manifest(
+            id,
             msg.sender,
-            wnativeAddress, // assetAddress,
+            wnativeAddress,
             depositAddress,
             rewardAddress
         );

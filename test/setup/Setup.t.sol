@@ -133,14 +133,13 @@ contract Setup {
             DAILY_REWARD
         );
 
-        console.log('manifestation created.');
+        // console.log('manifestation created.');
 
         MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
-        console.log('manifestation[0] address: %s', MANIFESTATION_0_ADDRESS);
+        // console.log('manifestation[0] address: %s', MANIFESTATION_0_ADDRESS);
         
         manifestation = Manifestation(MANIFESTATION_0_ADDRESS);
 
-        // todo enables: deposits (for test-purposes only).
         // console.log('deposit address: %s', DEPOSIT_ADDRESS);
         // console.log('this address: %s', address(this));
         // console.log('soulDAO address: %s', manifester.soulDAO());

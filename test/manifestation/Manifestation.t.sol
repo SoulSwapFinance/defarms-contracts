@@ -12,13 +12,13 @@ contract ManifestationTest is Test, Setup {
     function _getStrings() internal view returns (
         string memory name,
         string memory symbol,
-        string memory logoURI,
-        string memory assetSymbol
+        string memory logoURI
+        // string memory assetSymbol
     ) {
         name = manifestation.name();
         symbol = manifestation.symbol();
         logoURI = manifestation.logoURI();
-        assetSymbol = manifestation.assetSymbol();
+        // assetSymbol = manifestation.assetSymbol();
     }
 
     function _userInfo(address _account) internal view returns (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) {
@@ -37,17 +37,15 @@ contract ManifestationTest is Test, Setup {
 
     // [strings]: Manifestation Strings.
     function testStrings() public {
-        string memory _name = 'Manifest: RewardToken';
-        string memory _symbol = 'REWARD-NATIVE MP';
+        string memory _name = '[0] RewardToken Farm';
+        string memory _symbol = 'REWARD';
         string memory _logoURI = '';
-        string memory _assetSymbol = 'NATIVE';
 
-        (string memory name, string memory symbol, string memory logoURI, string memory assetSymbol) = _getStrings();
+        (string memory name, string memory symbol, string memory logoURI) = _getStrings();
 
         assertEq(name, _name);
         assertEq(symbol, _symbol);
         assertEq(logoURI, _logoURI);
-        assertEq(assetSymbol, _assetSymbol);
     }
 
     // [deposit]: Deposit 100 tokens.

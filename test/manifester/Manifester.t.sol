@@ -120,5 +120,3 @@ contract ManifesterTest is Test, Setup {
         console.log('[+] enchanter[0, 1] statuses updated to: %s.', status_0_);
     }
 }
-
-// todo: test for 9 decimals, 0 decimals
