@@ -84,7 +84,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
-    // [..] proxy for setting contract.
+    // [.√.] proxy for setting contract.
     modifier whileSettable {
         require(isSettable, 'contract is currently not settable');
         _;
@@ -257,7 +257,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return tvl;
     }
 
-    // [..] returns: the total amount of deposited tokens.
+    // [.√.] returns: the total amount of deposited tokens.
     function getTotalDeposit() public view override returns (uint totalDeposited) {
         totalDeposited = depositToken.balanceOf(address(this));
 
@@ -478,7 +478,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isActivated = enabled;
     }
 
-    // [..] updates: feeDays (onlyDAO, whileSettable)
+    // [.√.] updates: feeDays (onlyDAO, whileSettable)
     function setFeeDays(uint _feeDays) external onlyDAO whileSettable {
         // gets: current fee days & ensures distinction (pool)
         require(feeDays != toWei(_feeDays), 'no change requested');
@@ -527,12 +527,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         /*/ SOUL (OVERRIDE) FUNCTIONS /*/
     //////////////////////////////////////////
 
-    // [..] prevents: funny business (onlySOUL).
+    // [.√.] prevents: funny business (onlySOUL).
     function toggleSettable(bool enabled) external onlySOUL {
         isSettable = enabled;
     }
 
-    // [..] overrides: feeDays (onlySOUL)
+    // [.√.] overrides: feeDays (onlySOUL)
     function setFeeDaysOverride(uint _feeDays) external onlySOUL {
         // gets: current fee days & ensures distinction (pool)
         require(feeDays != toWei(_feeDays), 'no change requested');

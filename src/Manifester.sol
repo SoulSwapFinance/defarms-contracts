@@ -116,6 +116,7 @@ contract Manifester is IManifester {
         address rewardAddress,
         uint enchanterId,
         uint duraDays,
+        uint feeDays,
         uint dailyReward
     ) external whileActive exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
@@ -142,9 +143,7 @@ contract Manifester is IManifester {
         address enchanterAddress = enchanter.account;
 
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
-        bytes memory bytecode = type(Manifestation).creationCode;
-        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
-        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
+        manifestation = generateManifestation(depositAddress, id);
 
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
@@ -164,7 +163,7 @@ contract Manifester is IManifester {
             enchanterAddress: enchanterAddress
         }));
 
-        _initializeManifestation(id, duraDays, 0, dailyReward);
+        _initializeManifestation(id, duraDays, feeDays, dailyReward);
     
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
@@ -175,6 +174,7 @@ contract Manifester is IManifester {
         address rewardAddress,
         uint enchanterId,
         uint duraDays,
+        uint feeDays,
         uint dailyReward
     ) external whileActive onlySOUL exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
@@ -193,9 +193,7 @@ contract Manifester is IManifester {
         address enchanterAddress = enchanter.account;
 
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
-        bytes memory bytecode = type(Manifestation).creationCode;
-        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
-        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
+        manifestation = generateManifestation(depositAddress, id);
 
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
@@ -215,12 +213,12 @@ contract Manifester is IManifester {
             enchanterAddress: enchanterAddress
         }));
 
-        _initializeManifestation(id, duraDays, 0, dailyReward);
+        _initializeManifestation(id, duraDays, feeDays, dailyReward);
     
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
     }
 
-    function generateManifestation(address depositAddress, uint id) external returns (address manifestation) {
+    function generateManifestation(address depositAddress, uint id) public returns (address manifestation) {
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
         bytes memory bytecode = type(Manifestation).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));

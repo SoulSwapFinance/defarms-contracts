@@ -39,4 +39,4 @@ contract ContractTest is Test {
 This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.getfoundry.sh/getting-started/installation.html) for instructions on how to install and use Foundry.
 
 # Deployed Contracts
-- [Manifester.sol](https://ftmscan.com/address/0x7605ed70c5bD956E20ea409E90f3409729482ee7#code): 0x7605ed70c5bD956E20ea409E90f3409729482ee7
+- [Manifester.sol](https://ftmscan.com/address/0x08b8df07315d0d70AFa57684aD822Cc209104B7E#code): 0x08b8df07315d0d70AFa57684aD822Cc209104B7E

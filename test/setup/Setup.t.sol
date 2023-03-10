@@ -125,11 +125,11 @@ contract Setup {
         // creates: Manifestation[0]
         manifester.createManifestationOverride(
             DEPOSIT_ADDRESS,      // address depositAddress,
-            REWARD_ADDRESS,       // uint enchanterId, 
-            0,                    // address rewardAddress, 
+            REWARD_ADDRESS,       // uint rewardAddress,
+            0,                    // address enchanterId,
             // true,                  // bool isNative
             DURA_DAYS,
-            // FEE_DAYS,
+            FEE_DAYS,
             DAILY_REWARD
         );
 
@@ -173,7 +173,7 @@ contract Setup {
         
         // sets: feeRate to 14%.
         // console.log('setting fee days...');
-        manifestation.setFeeDays(14);
+        // manifestation.setFeeDays(14);
         // console.log('fee days set');
 
         // sets: addresses for test clarity.
