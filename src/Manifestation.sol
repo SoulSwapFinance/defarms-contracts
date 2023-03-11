@@ -19,9 +19,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public depositAddress;
     address public rewardAddress;
 
-    IERC20 public depositToken;
-    IERC20 public assetToken;
-    IERC20 public rewardToken;
+    IERC20 public DEPOSIT;
+    IERC20 public ASSET;
+    IERC20 public REWARD;
 
     string public override name;
     string public override symbol;
@@ -45,6 +45,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     bool public isSetup;
     bool public isEmergency;
     bool public isActivated;
+    bool public isReclaimable;
     bool public isSettable;
 
     // user info
@@ -63,6 +64,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // controls: emergencyWithdrawals.
     modifier emergencyActive {
         require(isEmergency, 'emergency mode is not active.');
+        _;
+    }
+
+    // controls: reclaims.
+    modifier whileReclaimable {
+        require(isReclaimable, 'reclaim mode is not active.');
+        require(isEmergency, 'activate emergency mode to enable emergency withdrawals.');
         _;
     }
 
@@ -110,11 +118,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     event Harvested(address indexed user, uint amount, uint timestamp);
     event Deposited(address indexed user, uint amount, uint timestamp);
-    event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
-
     event Withdrawn(address indexed user, uint amount, uint feeAmount, uint timestamp);
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
-    event FeeDaysUpdated(uint feeDays);
+
+    event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
+    event RewardsReclaimed(address msgSender, uint amount);
+
+    event EmergencyToggled(bool enabled, address msgSender, uint timestamp);
+    event ActiveToggled(bool enabled, address msgSender, uint timestamp);
+    event FeeDaysUpdated(uint feeDays, uint timestamp);
 
     // [.√.] sets the manifester at creation //
     constructor() {
@@ -127,7 +139,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         address _creatorAddress,
         address _assetAddress,
         address _depositAddress,
-        address _rewardAddress
+        address _rewardAddress,
+        string memory _logoURI
         ) external onlyManifester {
         require(!isManifested, 'initialize once');
 
@@ -142,17 +155,18 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         wnativeAddress = manifester.wnativeAddress();
         nativeSymbol = manifester.nativeSymbol();
         usdcAddress = manifester.usdcAddress();
+        logoURI = _logoURI;
 
         // sets: from input data.
-        assetToken = IERC20(assetAddress);
-        depositToken = IERC20(depositAddress);
-        rewardToken = IERC20(rewardAddress);
+        ASSET = IERC20(assetAddress);
+        DEPOSIT = IERC20(depositAddress);
+        REWARD = IERC20(rewardAddress);
 
         // sets: initial states.
         isManifested = true;
         isSettable = true;
 
-        // constructs: name that corresponds to the rewardToken.
+        // constructs: name that corresponds to the REWARD.
         name = string(abi.encodePacked('[', uint2str(_id), '] ', ERC20(rewardAddress).name(), ' Farm'));
         symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol()));
 
@@ -161,7 +175,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     
     // [.√.] sets: rewards (callable from manifester)
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
-        require(!isSetup, 'already setup');
+        // note: below isn't necessary, so long as maifester contract sets up only upon creation.
+        // require(!isSetup, 'already setup');
 
         // sets: key info.
         duraDays = _duraDays;
@@ -202,15 +217,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // gets: `accRewardPerShare` & `lpSupply` (pool)
         uint _accRewardPerShare = accRewardPerShare; // uses: local variable for reference use.
-        uint depositSupply = depositToken.balanceOf(address(this));
+        uint depositSupply = DEPOSIT.balanceOf(address(this));
 
         // [if] holds deposits & rewards issued at least once (pool)
         if (block.timestamp > lastRewardTime && depositSupply != 0) {
-            // gets: multiplier from the time since now and last time rewards issued (pool)
+            // gets: multiplier from the time since now and last time rewards issued (pool).
             uint multiplier = getMultiplier(lastRewardTime, block.timestamp);
-            // get: reward as the product of the elapsed emissions and the share of soul rewards (pool)
+            // get: reward as the product of the elapsed emissions and the share of rewards (pool).
             uint reward = multiplier * rewardPerSecond;
-            // adds: product of reward and 1e12
+            // adds [+]: product [*] of reward and 1e12
             _accRewardPerShare = accRewardPerShare + reward * 1e12 / depositSupply;
         }
 
@@ -232,15 +247,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         IERC20 WNATIVE = IERC20(wnativeAddress);
         IERC20 USDC = IERC20(usdcAddress);
     
-        uint totalSupply = depositToken.totalSupply();
+        uint totalSupply = DEPOSIT.totalSupply();
 
         uint assetPrice = 
             isNativePair ? uint(IManifester(manifester).getNativePrice()) 
                 : toWei(1);
 
         uint assetBalance = 
-            isNativePair ? WNATIVE.balanceOf(address(depositToken)) 
-                : USDC.balanceOf(address(depositToken));
+            isNativePair ? WNATIVE.balanceOf(address(DEPOSIT)) 
+                : USDC.balanceOf(address(DEPOSIT));
 
         uint assetValue = assetBalance * assetPrice;
         pricePerToken = assetValue * 2 / totalSupply;
@@ -259,7 +274,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] returns: the total amount of deposited tokens.
     function getTotalDeposit() public view override returns (uint totalDeposited) {
-        totalDeposited = depositToken.balanceOf(address(this));
+        totalDeposited = DEPOSIT.balanceOf(address(this));
 
         return totalDeposited;
     }
@@ -334,10 +349,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(pendingReward > 0, 'there is nothing to harvest');
 
         // ensures: only a full payout is made, else fails.
-        require(rewardToken.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+        require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
         
         // transfers: reward token to user.
-        rewardToken.safeTransfer(msg.sender, pendingReward);
+        REWARD.safeTransfer(msg.sender, pendingReward);
 
         // updates: reward debt (user).
         user.rewardDebt = user.amount * accRewardPerShare / 1e12;
@@ -360,13 +375,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
                 // [if] rewards pending, [then] transfer to user.
                 if(pendingReward > 0) { 
                     // [then] ensures: only a full payout is made, else fails.
-                    require(rewardToken.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
-                    rewardToken.safeTransfer(msg.sender, pendingReward);
+                    require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+                    REWARD.safeTransfer(msg.sender, pendingReward);
                 }
         }
 
-        // transfers: depositToken from user to contract
-        depositToken.safeTransferFrom(address(msg.sender), address(this), amount);
+        // transfers: DEPOSIT from user to contract
+        DEPOSIT.safeTransferFrom(address(msg.sender), address(this), amount);
 
         // adds: deposit amount (for user).
         user.amount += amount;
@@ -399,8 +414,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // [if] rewards are pending, [then] send rewards to user.
         if(pendingReward > 0) { 
             // ensures: only a full payout is made, else fails.
-            require(rewardToken.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
-            rewardToken.safeTransfer(msg.sender, pendingReward); 
+            require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+            REWARD.safeTransfer(msg.sender, pendingReward); 
         }
 
         // gets: timeDelta as the time since last withdrawal.
@@ -425,9 +440,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         user.withdrawTime = block.timestamp;
 
         // transfers: `feeAmount` --> DAO.
-        depositToken.safeTransfer(DAO, feeAmount);
+        DEPOSIT.safeTransfer(DAO, feeAmount);
         // transfers: withdrawableAmount amount --> user.
-        depositToken.safeTransfer(address(msg.sender), withdrawableAmount);
+        DEPOSIT.safeTransfer(address(msg.sender), withdrawableAmount);
 
         emit Withdrawn(msg.sender, amount, feeAmount, block.timestamp);
     }
@@ -440,8 +455,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // helps: manage calculations.
         update();
 
-        // transfers: depositToken to the user.
-        depositToken.safeTransfer(msg.sender, user.amount);
+        // transfers: DEPOSIT to the user.
+        DEPOSIT.safeTransfer(msg.sender, user.amount);
 
         // eliminates: user deposit `amount` & `rewardDebt`.
         user.amount = 0;
@@ -471,11 +486,19 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [..] enables: panic button (onlyDAO, whileSettable)
     function toggleEmergency(bool enabled) external onlyDAO whileSettable {
         isEmergency = enabled;
+        // toggles: active state (for deposits and withdrawals).
+        isActivated = !enabled;
+        // reclaimable is only enabled IFF emergency is activated.
+        isReclaimable = enabled;
+
+        emit EmergencyToggled(enabled, msg.sender, block.timestamp);
     }
 
     // [..] toggles: pause state (onlyDAO, whileSettable)
     function toggleActive(bool enabled) external onlyDAO whileSettable {
         isActivated = enabled;
+
+        emit ActiveToggled(enabled, msg.sender, block.timestamp);
     }
 
     // [.√.] updates: feeDays (onlyDAO, whileSettable)
@@ -489,7 +512,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // updates: fee days (pool)
         feeDays = toWei(_feeDays);
         
-        emit FeeDaysUpdated(toWei(_feeDays));
+        emit FeeDaysUpdated(toWei(_feeDays), block.timestamp);
     }
 
     // [.√.] sets: startTime & endTime (onlyDAO)
@@ -523,6 +546,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         DAO = _DAO;
     }
 
+    function reclaimRewards() external whileReclaimable onlyDAO {
+        uint balance = REWARD.balanceOf(address(this));
+        REWARD.safeTransfer(DAO, balance);
+
+        emit RewardsReclaimed(msg.sender, balance);
+    }
+
     //////////////////////////////////////////
         /*/ SOUL (OVERRIDE) FUNCTIONS /*/
     //////////////////////////////////////////
@@ -543,7 +573,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // updates: fee days (pool)
         feeDays = toWei(_feeDays);
         
-        emit FeeDaysUpdated(toWei(_feeDays));
+        emit FeeDaysUpdated(toWei(_feeDays), block.timestamp);
     }
 
     // [..] overrides: active state (onlySOUL).

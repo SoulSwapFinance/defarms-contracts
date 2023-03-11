@@ -127,10 +127,11 @@ contract Setup {
             DEPOSIT_ADDRESS,      // address depositAddress,
             REWARD_ADDRESS,       // uint rewardAddress,
             0,                    // address enchanterId,
-            // true,                  // bool isNative
+            // true,              // bool isNative
             DURA_DAYS,
             FEE_DAYS,
-            DAILY_REWARD
+            DAILY_REWARD,
+            'https://raw.githubusercontent.com/SoulSwapFinance/assets/prod/blockchains/fantom/assets/0xc7183455a4C133Ae270771860664b6B7ec320bB1.logo.png'
         );
 
         // console.log('manifestation created.');

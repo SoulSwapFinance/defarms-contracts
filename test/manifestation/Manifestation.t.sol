@@ -43,13 +43,16 @@ contract ManifestationTest is Test, Setup {
     function testStrings() public {
         string memory _name = '[0] RewardToken Farm';
         string memory _symbol = 'REWARD';
-        string memory _logoURI = '';
+        string memory _logoURI = 'https://raw.githubusercontent.com/SoulSwapFinance/assets/prod/blockchains/fantom/assets/0xc7183455a4C133Ae270771860664b6B7ec320bB1.logo.png';
 
         (string memory name, string memory symbol, string memory logoURI) = _getStrings();
+        // console.log('depositAddress: %s', manifestation.depositAddress());
+        // console.log('logoURI: %s', logoURI);
 
         assertEq(name, _name);
         assertEq(symbol, _symbol);
         assertEq(logoURI, _logoURI);
+        console.log('[+] strings reported accurately.');
     }
 
     // [deposit]: Deposits 100 tokens.

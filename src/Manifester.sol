@@ -57,7 +57,8 @@ contract Manifester is IManifester {
         address rewardAddress, 
         address creatorAddress,
         address enchanterAddress,
-        address manifestation
+        address manifestation,
+        string logoURI
     );
 
     event Paused(bool enabled);
@@ -96,10 +97,9 @@ contract Manifester is IManifester {
         // sets: sacrifice to 5%.
         bloodSacrifice = toWei(5);
         nativeSymbol = _nativeSymbol;
-
+        // sets: key addresses.
         usdcAddress = _usdcAddress;
         wnativeAddress = _wnativeAddress;
-
         soulDAO = msg.sender;
         nativeOracle = IOracle(_nativeOracle);
         oracleDecimals = _oracleDecimals;
@@ -117,7 +117,8 @@ contract Manifester is IManifester {
         uint enchanterId,
         uint duraDays,
         uint feeDays,
-        uint dailyReward
+        uint dailyReward,
+        string memory logoURI
     ) external whileActive exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
         id = manifestations.length;
@@ -163,9 +164,9 @@ contract Manifester is IManifester {
             enchanterAddress: enchanterAddress
         }));
 
-        _initializeManifestation(id, duraDays, feeDays, dailyReward);
+        _initializeManifestation(id, duraDays, feeDays, dailyReward, logoURI);
     
-        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
+        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation, logoURI);
     }
 
     // [.√.] creates: Manifestation
@@ -175,7 +176,8 @@ contract Manifester is IManifester {
         uint enchanterId,
         uint duraDays,
         uint feeDays,
-        uint dailyReward
+        uint dailyReward,
+        string memory logoURI
     ) external whileActive onlySOUL exists(enchanterId, totalEnchanters) returns (address manifestation, uint id) {
         // creates: id reference.
         id = manifestations.length;
@@ -213,9 +215,9 @@ contract Manifester is IManifester {
             enchanterAddress: enchanterAddress
         }));
 
-        _initializeManifestation(id, duraDays, feeDays, dailyReward);
+        _initializeManifestation(id, duraDays, feeDays, dailyReward, logoURI);
     
-        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation);
+        emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation, logoURI);
     }
 
     function generateManifestation(address depositAddress, uint id) public returns (address manifestation) {
@@ -226,7 +228,7 @@ contract Manifester is IManifester {
     }
 
     // [.√.] initializes: manifestation
-    function _initializeManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward) internal exists(id, totalManifestations) {
+    function _initializeManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward, string memory logoURI) internal exists(id, totalManifestations) {
         // gets: stored manifestation info by id.
         Manifestations storage manifestation = mInfo[id];
 
@@ -241,7 +243,8 @@ contract Manifester is IManifester {
             msg.sender,
             wnativeAddress,
             depositAddress,
-            rewardAddress
+            rewardAddress,
+            logoURI
         );
 
         _launchManifestation(id, duraDays, feeDays, dailyReward);
