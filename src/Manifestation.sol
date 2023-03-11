@@ -46,9 +46,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     bool public isManifested;
     bool public isSetup;
     bool public isEmergency;
-    bool public isActivated;
+    bool public isActive;
     bool public isReclaimable;
     bool public isSettable;
+
+    bool private isPendingDAO;
+    address private pendingDAO;
+
+    bool private isPendingSoulDAO;
+    address private pendingSoulDAO;
 
     // user info
     struct Users {
@@ -71,8 +77,20 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // controls: reclaims.
     modifier whileReclaimable {
-        require(isReclaimable, 'reclaim mode is not active.');
+        require(isReclaimable, 'reclaimable mode is not active.');
         require(isEmergency, 'activate emergency mode to enable emergency withdrawals.');
+        _;
+    }
+
+    modifier whilePendingDAO {
+        require(isPendingDAO, 'only available while pending DAO transfer');
+        require(pendingDAO == msg.sender, 'only the pending DAO may accept ownership');
+        _;
+    }
+
+    modifier whilePendingSoulDAO {
+        require(isPendingSoulDAO, 'only available while pending soulDAO transfer');
+        require(pendingSoulDAO == msg.sender, 'only the pending soulDAO may accept ownership');
         _;
     }
 
@@ -81,7 +99,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(startTime != 0, 'start time has not been set');
         require(amount > 0, 'cannot withdraw zero');
         require(block.timestamp >= startTime, 'rewards have not yet begun');
-        require(isActivated, 'contract is currently paused');
+        require(isActive, 'contract is currently paused');
         _;
     }
    
@@ -90,7 +108,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(startTime != 0, 'start time has not been set');
         require(amount > 0, 'cannot deposit zero');
         require(block.timestamp <= endTime, 'the reward period has ended');
-        require(isActivated, 'contract is currently paused');
+        require(isActive, 'contract is currently paused');
         _;
     }
 
@@ -125,9 +143,11 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
     event RewardsReclaimed(address msgSender, uint amount);
+    event UpdatedDAO(address DAO, uint timestamp);
+    event UpdatedSoulDAO(address soulDAO, uint timestamp);
 
-    event EmergencyToggled(bool enabled, address msgSender, uint timestamp);
     event ActiveToggled(bool enabled, address msgSender, uint timestamp);
+    event ReclaimableToggled(bool enabled, address msgSender, uint timestamp);
     event FeeDaysUpdated(uint feeDays, uint timestamp);
 
     // [.√.] sets the manifester at creation //
@@ -176,7 +196,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
-    
+
     // [.√.] sets: rewards (callable from manifester)
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
         // note: below isn't necessary, so long as maifester contract sets up only upon creation.
@@ -193,7 +213,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSetup = true;
     }
 
-    // [..] updates: rewards, so that they are accounted for.
+    // [.√.] updates: rewards, so that they are accounted for.
     function update() public {
         if (block.timestamp <= lastRewardTime) { return; }
         uint depositSupply = getTotalDeposit();
@@ -499,11 +519,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [.√.] toggles: pause state (onlyDAO, whileSettable)
     function toggleActive(bool enabled) external onlyDAO whileSettable {
         // sets: active state, when enabled.
-        isActivated = enabled;
+        isActive = enabled;
         // restricts: emergency exit, while active.
         isEmergency = !enabled;
-        // restricts: claims, while active.
-        isReclaimable = !enabled;
 
         emit ActiveToggled(enabled, msg.sender, block.timestamp);
     }
@@ -546,13 +564,28 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         endTime = start + duration;
     }
 
-    // [.√.] sets: DAO address (onlyDAO)
-    function setDAO(address _DAO) external onlyDAO {
-        require(_DAO != address(0), 'cannot set to zero address');
-        // updates: DAO adddress
-        DAO = _DAO;
+    // [.√.] sets: DAO address (onlyDAO).
+    function setDAO(address _pendingDAO) external onlyDAO whileSettable {
+        require(_pendingDAO != address(0), 'cannot set to zero address');
+        require(_pendingDAO != DAO, 'no change requested');
+
+        // updates: pendingDAO adddress.
+        pendingDAO = _pendingDAO;
+        // sets: isPending DAO to true.
+        isPendingDAO = true;
     }
 
+    // [.√.] sets: DAO address while preventing lockout (whilePendingDAO).
+    function acceptDAO() external whilePendingDAO {
+        // sets: isPendingDAO to false.
+        isPendingDAO = false;
+        // updates: DAO adddress.
+        DAO = msg.sender;
+
+        emit UpdatedDAO(DAO, block.timestamp);
+    }
+
+    // [.√.] sends: rewards to DAO (whileReclaimable, onlyDAO).
     function reclaimRewards() external whileReclaimable onlyDAO {
         uint balance = REWARD.balanceOf(address(this));
         REWARD.safeTransfer(DAO, balance);
@@ -583,9 +616,26 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit FeeDaysUpdated(toWei(_feeDays), block.timestamp);
     }
 
-    // [..] overrides: active state (onlySOUL).
-    function toggleActiveOverride(bool enabled) external onlySOUL {
-        isActivated = enabled;
+    // [.√.] overrides: active state (onlySOUL).
+    function toggleActiveOverride(bool enabled) public onlySOUL {
+        // sets: active state, when enabled.
+        isActive = enabled;
+        // restricts: emergency exit, while active.
+        isEmergency = !enabled;
+
+        emit ActiveToggled(enabled, msg.sender, block.timestamp);
+    }
+
+    // [.√.] sets: reclaimable status.
+    function setReclaimable(bool enabled) external onlySOUL {
+        // [if] setting reclaimable, [then] ensure inactive deposits and active emergency withdrawals.
+        if (enabled) { toggleActiveOverride(false); }
+
+        // updates: reclaimable to desired state.
+        isReclaimable = enabled;
+
+        emit ReclaimableToggled(enabled, msg.sender, block.timestamp);
+
     }
 
     // [.√.] overrides logoURI (onlySOUL).
@@ -593,11 +643,25 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         logoURI = _logoURI;
     }
 
-    // [.√.] sets: soulDAO address (onlySOUL).
-    function setSoulDAO(address _soulDAO) external onlySOUL {
-        require(_soulDAO != address(0), 'cannot set to zero address');
-        // updates: soulDAO adddress
-        soulDAO = _soulDAO;
+    // [.√.] sets: pendingSoulDAO address (onlySOUL).
+    function setSoulDAO(address _pendingSoulDAO) external onlySOUL {
+        require(_pendingSoulDAO != address(0), 'cannot set to zero address');
+        require(_pendingSoulDAO != soulDAO, 'no change requested');
+
+        // updates: pendingDAO adddress.
+        pendingSoulDAO = _pendingSoulDAO;
+        // sets: isPending DAO to true.
+        isPendingSoulDAO = true;
+    }
+
+    // [.√.] sets: soulDAO address while preventing lockout (whilePendingSoulDAO).
+    function acceptSoulDAO() external whilePendingSoulDAO {
+        // sets: isPendingSoulDAO to false.
+        isPendingSoulDAO = false;
+        // updates: soulDAO adddress.
+        soulDAO = msg.sender;
+
+        emit UpdatedSoulDAO(soulDAO, block.timestamp);
     }
 
     // [.√.] sets: native or stable (onlySOUL, when override is needed).

@@ -202,4 +202,36 @@ contract ManifestationTest is Test, Setup {
         console.log('[+] deltaDays reported accurately.');
     }
 
+    function testReclaimRewards() public {
+        uint startBalance = REWARD.balanceOf(MANIFESTATION_0_ADDRESS);
+
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.setReclaimable(true);
+        vm.stopPrank();
+
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        // proves: reverts when soulDAO tries to reclaim rewards.
+        vm.expectRevert();
+        manifestation.reclaimRewards();
+        vm.stopPrank();
+
+        vm.startPrank(DAO_ADDRESS);
+        manifestation.toggleActive(false);
+        // reclaims: when active, inactive emergency, and isReclaimable.
+        manifestation.reclaimRewards();
+        uint endBalance = REWARD.balanceOf(MANIFESTATION_0_ADDRESS);
+        vm.stopPrank();
+
+        // console.log('start balance: %s', startBalance);
+        // console.log('end balance: %s', endBalance);
+
+        assertTrue(startBalance > endBalance);
+        console.log('[+] reclaimed rewards successfully.');
+
+    }
+
+    function testEmergencyWithdraw() public {
+
+    }
+
 }

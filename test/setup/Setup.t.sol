@@ -11,7 +11,7 @@ import { stdStorage, StdStorage, Test, Vm } from "forge-std/Test.sol";
 import { Utilities } from "../utils/Utilities.sol";
 import { console } from "forge-std/console.sol";
 
-contract Setup {
+contract Setup is Test {
     // contracts.
     Manifester manifester;
     Manifestation manifestation;
@@ -182,8 +182,16 @@ contract Setup {
 
         // sets: addresses for test clarity.
         manifester.setSoulDAO(SOUL_DAO_ADDRESS);
+
         manifestation.setSoulDAO(SOUL_DAO_ADDRESS);
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.acceptSoulDAO();
+        vm.stopPrank();
+
         manifestation.setDAO(DAO_ADDRESS);
+        vm.prank(DAO_ADDRESS);
+        manifestation.acceptDAO();
+        vm.stopPrank();
 
 
     }

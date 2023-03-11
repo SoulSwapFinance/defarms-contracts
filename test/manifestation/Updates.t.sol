@@ -6,12 +6,12 @@ import "../setup/Setup.t.sol";
 contract UpdatesTest is Test, Setup {
     // [toggleActive]
     function testToggleActive() public {
-        bool isActive_0 = manifestation.isActivated();
+        bool isActive_0 = manifestation.isActive();
         // console.log('isActive(0)', isActive_0);
         // toggles: active state.
         vm.startPrank(DAO_ADDRESS);
         manifestation.toggleActive(!isActive_0);
-        bool isActive_1 = manifestation.isActivated();
+        bool isActive_1 = manifestation.isActive();
         // console.log('isActive(1)', isActive_1);
         // expects: active states updated.
         assertTrue(isActive_0 != isActive_1);
@@ -129,5 +129,43 @@ contract UpdatesTest is Test, Setup {
         console.log('[+] isNativePair updated successfully.');
         assertEq(assetAddress_1, _assetAddress_1);
         console.log('[+] assetAddress updated successfully.');
+    }
+
+    function testEmergencyState() public {
+        bool ON = true;
+        bool OFF = false;
+
+        bool _isActive_0 = ON;
+        bool _isEmergency_0 = OFF;
+        bool _isReclaimable_0 = OFF;
+
+        bool _isActive_1 = OFF;
+        bool _isEmergency_1 = ON;
+        // bool _isReclaimable_1 = OFF;
+
+        bool isActive_0 = manifestation.isActive();
+        bool isEmergency_0 = manifestation.isEmergency();
+        bool isReclaimable_0 = manifestation.isReclaimable();
+        // console.log('isActive_0: %s', isActive_0);
+        assertEq(isActive_0, _isActive_0);
+        assertEq(isEmergency_0, _isEmergency_0);
+        assertEq(isReclaimable_0, _isReclaimable_0);
+
+        vm.startPrank(DAO_ADDRESS);
+        manifestation.toggleActive(OFF);
+        vm.stopPrank();
+
+        bool isActive_1 = manifestation.isActive();
+        bool isEmergency_1 = manifestation.isEmergency();
+        bool isReclaimable_1 = manifestation.isReclaimable();
+
+        assertEq(isActive_1, _isActive_1);
+        console.log('[+] active state updated successfully.');
+
+        assertEq(isEmergency_1, _isEmergency_1);
+        console.log('[+] emergency state updated successfully.');
+        
+        assertEq(isReclaimable_0, isReclaimable_1);
+        console.log('[+] reclaimable state not updated (as expected).');
     }
 }
