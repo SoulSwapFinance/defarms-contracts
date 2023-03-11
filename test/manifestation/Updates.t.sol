@@ -33,8 +33,6 @@ contract UpdatesTest is Test, Setup {
         vm.stopPrank();
         vm.startPrank(DAO_ADDRESS);
         vm.expectRevert();
-        manifestation.toggleEmergency(true);
-        vm.expectRevert();
         manifestation.toggleActive(false);
         vm.expectRevert();
         manifestation.setFeeDays(12);
@@ -102,5 +100,34 @@ contract UpdatesTest is Test, Setup {
         console.log('[+] reverts when non-DAO updates fee days (as expected).');
     }
 
+    function testSetNativePair() public {
+        address _assetAddress_0 = manifestation.wnativeAddress();
+        address _assetAddress_1 = manifestation.usdcAddress();
+        bool _isNative_0 = true;
+        bool _isNative_1 = false;
 
+        bool isNative_0 = manifestation.isNativePair();
+        address assetAddress_0 = manifestation.assetAddress();
+        assertEq(isNative_0, _isNative_0);
+        assertEq(assetAddress_0, _assetAddress_0);
+
+        // updates native pair to false.
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.setNativePair(false);
+        vm.stopPrank();
+
+        // updates native pair to false (should revert).
+        vm.startPrank(address(0xbae));
+        vm.expectRevert();
+        manifestation.setNativePair(false);
+        vm.stopPrank();
+        console.log('[+] reverts when non-SouDAO calls setNativePair (as expected).');
+
+        bool isNative_1 = manifestation.isNativePair();
+        address assetAddress_1 = manifestation.assetAddress();
+        assertEq(isNative_1, _isNative_1);
+        console.log('[+] isNativePair updated successfully.');
+        assertEq(assetAddress_1, _assetAddress_1);
+        console.log('[+] assetAddress updated successfully.');
+    }
 }

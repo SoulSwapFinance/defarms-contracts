@@ -85,4 +85,16 @@ contract GettersTest is Test, Setup {
         assertEq(pendingRewards, dailyRewards);
         console.log('[+] pending rewards (24H) reported accurately.');
     }
+
+    function testGetWithdrawable() public {
+        uint _timeDelta = 1 days;
+        uint _amount = toWei(100);
+        uint deltaDays = manifestation.getDeltaDays(_timeDelta);
+        (uint feeAmount, uint withdrawableAmount) = manifestation.getWithdrawable(deltaDays, _amount);
+        console.log('feeAmount: %s', fromWei(feeAmount));
+        console.log('withdrawableAmount: %s', fromWei(withdrawableAmount));
+        bool equalsAmount = feeAmount + withdrawableAmount == _amount;
+        assertTrue(equalsAmount);
+        console.log('[+] feeAmount + withdrawableAmount = 100% of the withdrawal amount.');
+    }
 }

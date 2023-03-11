@@ -60,10 +60,10 @@ contract ManifestationTest is Test, Setup {
         // address depositToken = manifestation.depositAddress();
         // console.log('my deposit bal: %s', fromWei(DEPOSIT.balanceOf(address(this))));
         // console.log('deposit address: %s', depositToken);
+        uint deposited_0 = manifestation.totalDeposited(); 
         uint _depositAmount = toWei(100);
-        uint deposited_0 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
         _deposit(_depositAmount);
-        uint deposited_1 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
+        uint deposited_1 = manifestation.totalDeposited(); 
         uint depositAmount = deposited_1 - deposited_0;
         // console.log('deposited amount: %s', fromWei(depositAmount));
         assertEq(depositAmount, _depositAmount);
@@ -76,11 +76,12 @@ contract ManifestationTest is Test, Setup {
         _deposit(amount);
        
         uint _withdrawAmount = amount;
-        uint bal_0_M0 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
+        uint bal_0_M0 = manifestation.getTotalDeposit();
         _withdraw(_withdrawAmount);
-        uint bal_1_M0 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
+        uint bal_1_M0 = manifestation.totalDeposited();
         uint withdrawAmount = bal_0_M0 - bal_1_M0;
         assertEq(withdrawAmount, _withdrawAmount);
+        console.log('[+] withdrew %s from Manifestation successfully (no fee).', fromWei(withdrawAmount));
     }
 
     // [withdraw-fee]: Withdraws 50 tokens.
@@ -99,19 +100,19 @@ contract ManifestationTest is Test, Setup {
         // console.log('withdrawable: %s', fromWei(withdrawableAmount));
 
         uint _withdrawAmount = amount;
-        uint bal_0_M0 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
+        uint bal_0_M0 = manifestation.totalDeposited();
         uint bal_0_DAO = DEPOSIT.balanceOf(DAO_ADDRESS);
         uint bal_0_USER = DEPOSIT.balanceOf(address(this));
 
         // withdraws 500 from manifestation.
         _withdraw(_withdrawAmount);
-        uint bal_1_M0 = DEPOSIT.balanceOf(MANIFESTATION_0_ADDRESS);
+        uint bal_1_M0 = manifestation.totalDeposited();
         uint bal_1_DAO = DEPOSIT.balanceOf(DAO_ADDRESS);
         uint bal_1_USER = DEPOSIT.balanceOf(address(this));
 
         uint withdrawAmount = bal_0_M0 - bal_1_M0;
         assertEq(withdrawAmount, _withdrawAmount);
-        console.log('[+] withdrew %s from Manifestation successfully.', fromWei(withdrawAmount));
+        console.log('[+] withdrew %s from Manifestation successfully (with fee).', fromWei(withdrawAmount));
         string memory daoDirection = bal_1_DAO > bal_0_DAO ? '+' : '-';
         string memory userDirection = bal_1_USER > bal_0_USER ? '+' : '-';
         uint toDAO = bal_1_DAO > bal_0_DAO ? bal_1_DAO - bal_0_DAO : bal_0_DAO - bal_1_DAO;
@@ -146,15 +147,59 @@ contract ManifestationTest is Test, Setup {
 
     // [userInfo]
     function testUserInfo() public {
-        uint _amount = toWei(100);
-        _deposit(_amount);
-        // moves (warps): to timestamp 100.
-        vm.warp(86_402);
-        // (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo();
-        (uint amount, , , , ,) = _userInfo(address(this));
-        assertEq(amount, _amount);
-        console.log('[+] deposited amount reported accurately.');
-    }
+        uint _depositAmount = toWei(100);
+        uint _withdrawAmount = toWei(50);
+        uint _amount = _depositAmount - _withdrawAmount;
 
+        uint _depositTime = 1 days;
+        uint _withdrawTime = 3 days;
+
+        uint _timeDelta = 2 days;
+        uint _deltaDays = 2;
+
+        // moves (warps): to Day One.
+        vm.warp(_depositTime);
+        // deposits 100 tokens.
+        _deposit(_depositAmount);
+
+        // moves (warps): to Day Three.
+        vm.warp(_withdrawTime);
+        // withdraws: half the deposited amount.
+        _withdraw(_withdrawAmount);
+
+        // moves (warps): to Day Three.
+        vm.warp(3 days);
+        
+        uint accRewardPerShare = manifestation.accRewardPerShare();
+        uint _rewardDebt = _amount * accRewardPerShare / 1e12;
+
+        (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo(address(this));
+
+        // console.log('deposited: %s', fromWei(amount));
+        // console.log('rewardDebt: %s', rewardDebt);
+        // console.log('_rewardDebt: %s', _rewardDebt);
+        // console.log('withdrawTime: %s', withdrawTime);
+        // console.log('depositTime: %s', depositTime);
+        // console.log('timeDelta: %s', timeDelta);
+        // console.log('deltaDays: %s', deltaDays);
+
+        assertEq(amount, _amount);
+        console.log('[+] (deposited) amount reported accurately.');
+
+        assertEq(rewardDebt, _rewardDebt);
+        console.log('[+] rewardDebt reported accurately.');
+
+        assertEq(withdrawTime, _withdrawTime);
+        console.log('[+] withdrawTime reported accurately.');
+
+        assertEq(depositTime, _depositTime);
+        console.log('[+] depositTime reported accurately.');
+
+        assertEq(timeDelta, _timeDelta);
+        console.log('[+] timeDelta reported accurately.');
+
+        assertEq(deltaDays, _deltaDays);
+        console.log('[+] deltaDays reported accurately.');
+    }
 
 }

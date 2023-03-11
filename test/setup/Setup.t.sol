@@ -171,7 +171,10 @@ contract Setup {
         // console.log('approving deposit...');
         DEPOSIT.approve(MANIFESTATION_0_ADDRESS, toWei(INITIAL_SUPPLY));
         // console.log('deposit approved');
-        
+
+        // for demonstration purposes (on `totalDeposits`).
+        DEPOSIT.transfer(MANIFESTATION_0_ADDRESS, toWei(100));
+
         // sets: feeRate to 14%.
         // console.log('setting fee days...');
         // manifestation.setFeeDays(14);
@@ -181,6 +184,7 @@ contract Setup {
         manifester.setSoulDAO(SOUL_DAO_ADDRESS);
         manifestation.setSoulDAO(SOUL_DAO_ADDRESS);
         manifestation.setDAO(DAO_ADDRESS);
+
 
     }
 
