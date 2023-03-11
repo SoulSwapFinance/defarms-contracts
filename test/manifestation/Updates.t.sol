@@ -9,8 +9,8 @@ contract UpdatesTest is Test, Setup {
         bool isActive_0 = manifestation.isActive();
         // console.log('isActive(0)', isActive_0);
         // toggles: active state.
-        vm.startPrank(DAO_ADDRESS);
-        manifestation.toggleActive(!isActive_0);
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.toggleActiveOverride(!isActive_0);
         bool isActive_1 = manifestation.isActive();
         // console.log('isActive(1)', isActive_1);
         // expects: active states updated.
@@ -21,7 +21,7 @@ contract UpdatesTest is Test, Setup {
         // expects: non-DAO to revert when toggles active.
         vm.startPrank(address(0xbae));
         vm.expectRevert();
-        manifestation.toggleActive(!isActive_0);
+        manifestation.toggleActiveOverride(!isActive_0);
         vm.stopPrank();
         console.log('[+] active state failed to update when not DAO (as expected).');
     }
@@ -33,9 +33,9 @@ contract UpdatesTest is Test, Setup {
         vm.stopPrank();
         vm.startPrank(DAO_ADDRESS);
         vm.expectRevert();
-        manifestation.toggleActive(false);
+        manifestation.toggleActiveOverride(false);
         vm.expectRevert();
-        manifestation.setFeeDays(12);
+        manifestation.setFeeDaysOverride(12);
         vm.stopPrank();
         console.log('[+] reverts when DAO transacts on non-settable functions (as expected).');
     }
@@ -73,8 +73,8 @@ contract UpdatesTest is Test, Setup {
         uint maxFeeDays = 30;
         uint minFeeDays = 0;
 
-        vm.startPrank(DAO_ADDRESS);
-        manifestation.setFeeDays(maxFeeDays);
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.setFeeDaysOverride(maxFeeDays);
         vm.stopPrank();
 
         assertEq(maxFeeDays, fromWei(manifestation.feeDays()));
@@ -87,17 +87,17 @@ contract UpdatesTest is Test, Setup {
         assertEq(minFeeDays, fromWei(manifestation.feeDays()));
         console.log('[+] feeDays set to %s days.', minFeeDays);
 
-        vm.startPrank(DAO_ADDRESS);
+        vm.startPrank(SOUL_DAO_ADDRESS);
         vm.expectRevert();
-        manifestation.setFeeDays(maxFeeDays + 1);
+        manifestation.setFeeDaysOverride(maxFeeDays + 1);
         vm.stopPrank();
         console.log('[+] reverts when fee days exceeds the max of %s days (as expected).', maxFeeDays);
 
-        vm.startPrank(SOUL_DAO_ADDRESS);
+        vm.startPrank(DAO_ADDRESS);
         vm.expectRevert();
-        manifestation.setFeeDays(maxFeeDays);
+        manifestation.setFeeDaysOverride(maxFeeDays);
         vm.stopPrank();
-        console.log('[+] reverts when non-DAO updates fee days (as expected).');
+        console.log('[+] reverts when non-SoulDAO updates fee days (as expected).');
     }
 
     function testSetNativePair() public {
@@ -151,8 +151,8 @@ contract UpdatesTest is Test, Setup {
         assertEq(isEmergency_0, _isEmergency_0);
         assertEq(isReclaimable_0, _isReclaimable_0);
 
-        vm.startPrank(DAO_ADDRESS);
-        manifestation.toggleActive(OFF);
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.toggleActiveOverride(OFF);
         vm.stopPrank();
 
         bool isActive_1 = manifestation.isActive();

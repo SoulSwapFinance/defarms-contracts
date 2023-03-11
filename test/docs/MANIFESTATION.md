@@ -61,15 +61,10 @@
         - [insert disabled functions here...]
     - [ .√. ] **toggleSettable(false)**
         - [insert enabled functions here...]
-- [ .. ] **isEmergency**
-    - [ .. ] **toggleEmergency(true)**
-        - [insert disabled functions here...]
-    - [ .. ] **toggleEmergency(false)**
-        - [insert enabled functions here...]
 - [ .. ] **isActivated**
-    - [ .. ] **toggleActive(true)**
+    - [ .. ] **toggleActiveOverride(true)**
         - [insert disabled functions here...]
-    - [ .. ] **toggleActive(false)**
+    - [ .. ] **toggleActiveOverride(false)**
         - [insert enabled functions here...]
 
 ### **Addresses**

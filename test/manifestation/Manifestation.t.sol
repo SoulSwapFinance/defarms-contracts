@@ -215,8 +215,11 @@ contract ManifestationTest is Test, Setup {
         manifestation.reclaimRewards();
         vm.stopPrank();
 
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.toggleActiveOverride(false);
+        vm.stopPrank();
+
         vm.startPrank(DAO_ADDRESS);
-        manifestation.toggleActive(false);
         // reclaims: when active, inactive emergency, and isReclaimable.
         manifestation.reclaimRewards();
         uint endBalance = REWARD.balanceOf(MANIFESTATION_0_ADDRESS);

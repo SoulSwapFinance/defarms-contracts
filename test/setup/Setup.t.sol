@@ -164,7 +164,7 @@ contract Setup is Test {
         // unpauses: Manifestation[0].
         // console.log('toggling active...');
         // console.log('dao [m0] %s', manifestation.DAO());
-        manifestation.toggleActive(true);
+        manifestation.toggleActiveOverride(true);
         // console.log('[+] active set successfully.');
 
         // approves: deposit token to Manifestation[0].
@@ -177,7 +177,7 @@ contract Setup is Test {
 
         // sets: feeRate to 14%.
         // console.log('setting fee days...');
-        // manifestation.setFeeDays(14);
+        // manifestation.setFeeDaysOverride(14);
         // console.log('fee days set');
 
         // sets: addresses for test clarity.

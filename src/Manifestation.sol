@@ -216,16 +216,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [.√.] updates: rewards, so that they are accounted for.
     function update() public {
         if (block.timestamp <= lastRewardTime) { return; }
-        uint depositSupply = getTotalDeposit();
 
         // [if] first manifestation, [then] set `lastRewardTime` to meow.
-        if (depositSupply == 0) { lastRewardTime = block.timestamp; return; }
+        if (totalDeposited == 0) { lastRewardTime = block.timestamp; return; }
 
         // gets: multiplier from time elasped since pool began issuing rewards.
         uint multiplier = getMultiplier(lastRewardTime, block.timestamp);
         uint reward = multiplier * rewardPerSecond;
 
-        accRewardPerShare += (reward * 1e12 / depositSupply);
+        accRewardPerShare += (reward * 1e12 / totalDeposited);
         lastRewardTime = block.timestamp;
     }
 
@@ -240,16 +239,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // gets: `accRewardPerShare` & `depositSupply`
         uint _accRewardPerShare = accRewardPerShare; // uses: local variable for reference use.
-        uint _depositSupply = getTotalDeposit();
 
         // [if] holds deposits & rewards issued at least once.
-        if (block.timestamp > lastRewardTime && _depositSupply != 0) {
+        if (block.timestamp > lastRewardTime && totalDeposited != 0) {
             // gets: multiplier from the time since now and last time rewards issued (pool).
             uint multiplier = getMultiplier(lastRewardTime, block.timestamp);
             // get: reward as the product of the elapsed emissions and the share of rewards (pool).
             uint reward = multiplier * rewardPerSecond;
             // adds [+]: product [*] of reward and 1e12
-            _accRewardPerShare = accRewardPerShare + reward * 1e12 / _depositSupply;
+            _accRewardPerShare = accRewardPerShare + reward * 1e12 / totalDeposited;
         }
 
         // returns: rewardShare for user minus the amount paid out (user).
@@ -515,30 +513,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     ////////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ////////////////////////////////
-
-    // [.√.] toggles: pause state (onlyDAO, whileSettable)
-    function toggleActive(bool enabled) external onlyDAO whileSettable {
-        // sets: active state, when enabled.
-        isActive = enabled;
-        // restricts: emergency exit, while active.
-        isEmergency = !enabled;
-
-        emit ActiveToggled(enabled, msg.sender, block.timestamp);
-    }
-
-    // [.√.] updates: feeDays (onlyDAO, whileSettable)
-    function setFeeDays(uint _feeDays) external onlyDAO whileSettable {
-        // gets: current fee days & ensures distinction (pool)
-        require(feeDays != toWei(_feeDays), 'no change requested');
-        
-        // limits: feeDays by default maximum of 30 days.
-        require(toWei(_feeDays) <= toWei(30), 'exceeds a month of fees');
-        
-        // updates: fee days (pool)
-        feeDays = toWei(_feeDays);
-        
-        emit FeeDaysUpdated(toWei(_feeDays), block.timestamp);
-    }
 
     // [.√.] sets: startTime & endTime (onlyDAO)
     function setDelay(uint delayDays) external onlyDAO {
