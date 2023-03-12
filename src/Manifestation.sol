@@ -20,9 +20,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public depositAddress;
     address public rewardAddress;
 
-    IERC20 public DEPOSIT;
-    IERC20 public ASSET;
-    IERC20 public REWARD;
+    IERC20 private DEPOSIT;
+    IERC20 private ASSET;
+    IERC20 private REWARD;
 
     string public override name;
     string public override symbol;
@@ -474,7 +474,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Withdrawn(msg.sender, amount, feeAmount, block.timestamp);
     }
 
-    // [..] enables: withdrawal without caring about rewards (for example, when rewards end).
+    // [..] enables: withdrawal without caring about rewards (e.g. when rewards end).
     function emergencyWithdraw() external nonReentrant emergencyActive {
         // gets: pool & user data (to update later).
         Users storage user = userInfo[msg.sender];
@@ -612,7 +612,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     }
 
-    // [.√.] overrides logoURI (onlySOUL).
+    // [.√.] overrides: logoURI (onlySOUL).
     function setLogoURI(string memory _logoURI) external onlySOUL {
         logoURI = _logoURI;
     }
