@@ -234,6 +234,54 @@ contract ManifestationTest is Test, Setup {
     }
 
     function testEmergencyWithdraw() public {
+        _deposit(toWei(200));
+        bool isActive = manifestation.isActive();
+        assertTrue(isActive);
+        console.log('[+] confirmed the manifestation isActive');
+
+        // tries: emergecyWithdraw() whileActive (should fail).
+        vm.expectRevert();
+        manifestation.emergencyWithdraw();
+        console.log('[+] reverts when emergencyWithdraw() attempted whileActive');
+
+        // now: toggles the manifestation to inactive, in order to enable emergencyWithdrawal.
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.toggleActiveOverride(false);
+        vm.stopPrank();
+
+        // console.log('isActive: %s', manifestation.isActive());
+        expectFalse(manifestation.isActive());
+        console.log('[+] manifestation inactivated successfully.');
+
+        // since inactive, deposits and withdraws should fail.
+        vm.expectRevert();
+        manifestation.deposit(toWei(100));
+        console.log('[+] reverts when depositing while inactive (as expected).');
+        vm.expectRevert();
+        manifestation.withdraw(toWei(100));
+        console.log('[+] reverts when withdrawing while inactive (as expected).');
+
+        uint Balance_M0_0 = fromWei(manifestation.totalDeposited());
+        uint Balance_User_0 = fromWei(DEPOSIT.balanceOf((address(this))));
+
+        manifestation.emergencyWithdraw();
+
+        uint Balance_M0_1 = fromWei(manifestation.totalDeposited());
+        uint Balance_User_1 = fromWei(DEPOSIT.balanceOf((address(this))));
+
+        uint mDiff = Balance_M0_0 - Balance_M0_1;
+        uint userDiff = Balance_User_1 - Balance_User_0;
+
+        assertEq(mDiff, userDiff);
+        console.log('[+] emergencyWithdraw sent user funds successfully.');
+
+        (uint amount, uint rewardDebt, uint withdrawTime, uint depositTime, uint timeDelta, uint deltaDays) = _userInfo(address(this));
+        console.log('amount: %s, rewardDebt: %s, withdrawTime: %s', amount, rewardDebt, withdrawTime);
+        console.log('depositTime: %s, timeDelta: %s, deltaDays: %s', depositTime, timeDelta, deltaDays);
+        assertTrue(amount == 0);
+        console.log('[+] amount deposited updated to 0 upon emergencyWithdraw successfully.');
+        assertTrue(rewardDebt == 0);
+        console.log('[+] rewardDebt updated to 0 upon emergencyWithdraw successfully.');
 
     }
 

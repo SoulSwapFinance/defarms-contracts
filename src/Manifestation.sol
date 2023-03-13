@@ -432,11 +432,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         emit Withdrawn(msg.sender, amount, feeAmount, block.timestamp);
     }
 
-    // [..] enables: withdrawal without caring about rewards (e.g. when rewards end).
+    // [.√.] enables: withdrawal without caring about rewards (e.g. when rewards end).
     function emergencyWithdraw() external nonReentrant emergencyActive {
         // gets: pool & user data (to update later).
         Users storage user = userInfo[msg.sender];
         uint withdrawAmount = user.amount;
+        require(withdrawAmount > 0, 'nothing to withdraw');
 
         // helps: manage calculations.
         update();
