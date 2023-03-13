@@ -47,6 +47,7 @@ interface IManifester {
     function soulDAO() external returns (address);
     function usdcAddress() external returns (address);
     function wnativeAddress() external returns (address);
+    function auraAddress() external returns (address);
     function nativeSymbol() external returns (string memory);
     function getNativePrice() external view returns (int);
 }

@@ -19,10 +19,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public assetAddress;
     address public depositAddress;
     address public rewardAddress;
+    address public auraAddress;
 
     IERC20 private DEPOSIT;
     IERC20 private ASSET;
     IERC20 private REWARD;
+    IERC20 private AURA;
 
     string public override name;
     string public override symbol;
@@ -174,6 +176,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // sets: key data.
         DAO = creatorAddress;
         soulDAO = manifester.soulDAO();
+        auraAddress = manifester.auraAddress();
         wnativeAddress = manifester.wnativeAddress();
         nativeSymbol = manifester.nativeSymbol();
         usdcAddress = manifester.usdcAddress();
@@ -181,6 +184,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: from input data.
         ASSET = IERC20(assetAddress);
+        AURA = IERC20(auraAddress);
         DEPOSIT = IERC20(depositAddress);
         REWARD = IERC20(rewardAddress);
 
@@ -642,6 +646,13 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     function setNativePair(bool enabled) external onlySOUL {
         isNativePair = enabled;
         assetAddress = enabled ? wnativeAddress : usdcAddress;
+    }
+
+    // [..] updates: auraAddress (onlySoul).
+    function updateAuraAddress() external onlySOUL {
+        require(auraAddress != manifester.auraAddress(), 'no change.');
+        auraAddress = manifester.auraAddress();
+        AURA = IERC20(auraAddress);
     }
 
     ///////////////////////////////

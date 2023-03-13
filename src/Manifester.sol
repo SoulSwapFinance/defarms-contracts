@@ -33,6 +33,7 @@ contract Manifester is IManifester {
 
     string public override nativeSymbol;
     address public override wnativeAddress;
+    address public override auraAddress;
     address public override usdcAddress;
 
     uint public bloodSacrifice;
@@ -87,6 +88,7 @@ contract Manifester is IManifester {
     // [.√.] sets: key variables.
     constructor(
         address _factoryAddress,
+        address _auraAddress,
         address _usdcAddress,
         address _wnativeAddress,
         address _nativeOracle, 
@@ -98,6 +100,7 @@ contract Manifester is IManifester {
         bloodSacrifice = toWei(5);
         nativeSymbol = _nativeSymbol;
         // sets: key addresses.
+        auraAddress = _auraAddress;
         usdcAddress = _usdcAddress;
         wnativeAddress = _wnativeAddress;
         soulDAO = msg.sender;

@@ -17,6 +17,7 @@ contract Setup is Test {
     Manifestation manifestation;
 
     // mock custom tokens.
+    MockToken AURA;
     MockToken DEPOSIT;
     MockToken REWARD;
 
@@ -33,8 +34,9 @@ contract Setup is Test {
 
     address public FACTORY_ADDRESS;
 
-    address public REWARD_ADDRESS;
+    address public AURA_ADDRESS;
     address public DEPOSIT_ADDRESS;
+    address public REWARD_ADDRESS;
 
     address public USDC_ADDRESS;
     address public WNATIVE_ADDRESS;
@@ -42,6 +44,7 @@ contract Setup is Test {
     // numeric constants //
     uint public immutable ORACLE_DECIMALS = 8;
     uint public immutable DURA_DAYS = 90;
+    // uint public immutable DELAY_DAYS = 1;
     uint public immutable FEE_DAYS = 14;
     uint public immutable DAILY_REWARD = 100;
     uint public immutable INITIAL_SUPPLY = 1_000_000_000;
@@ -80,6 +83,14 @@ contract Setup is Test {
         );
         USDC_ADDRESS = address(USDC);
 
+        // initializes: AURA Token
+        AURA = new MockToken(
+            "SoulAura",
+            "AURA",
+            INITIAL_SUPPLY                     // totalSupply
+        );
+        AURA_ADDRESS = address(AURA);
+
         // initializes: Reward Token
         REWARD = new MockToken(
             "RewardToken",
@@ -99,6 +110,7 @@ contract Setup is Test {
         // deploys: Manifester Contract
         manifester = new Manifester(
             FACTORY_ADDRESS,
+            AURA_ADDRESS,
             USDC_ADDRESS,
             WNATIVE_ADDRESS,
             NATIVE_ORACLE_ADDRESS,
