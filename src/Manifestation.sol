@@ -30,6 +30,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     string public override symbol;
     string public override logoURI;
     
+    uint public auraMinimum;
     uint public duraDays;
     uint public feeDays;
     uint public dailyReward;
@@ -97,19 +98,20 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // proxy for pausing contract.
-    modifier isWithdrawable(uint amount) {
-        require(startTime != 0, 'start time has not been set');
-        require(amount > 0, 'cannot withdraw zero');
-        require(block.timestamp >= startTime, 'rewards have not yet begun');
+    modifier isDepositable(uint amount) {
+        require(AURA.balanceOf(msg.sender) > auraMinimum, 'insufficient AURA for deposits');
+        require(amount > 0, 'cannot deposit zero');
+        require(block.timestamp <= endTime, 'the reward period has ended');
+        // recall: isActive is first activated upon setting start and end times.
         require(isActive, 'contract is currently paused');
         _;
     }
-   
+
     // proxy for pausing contract.
-    modifier isDepositable(uint amount) {
-        require(startTime != 0, 'start time has not been set');
-        require(amount > 0, 'cannot deposit zero');
-        require(block.timestamp <= endTime, 'the reward period has ended');
+    modifier isWithdrawable(uint amount) {
+        require(amount > 0, 'cannot withdraw zero');
+        require(block.timestamp >= startTime, 'rewards have not yet begun');
+        // recall: isActive is first activated upon setting start and end times.
         require(isActive, 'contract is currently paused');
         _;
     }
@@ -181,6 +183,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         nativeSymbol = manifester.nativeSymbol();
         usdcAddress = manifester.usdcAddress();
         logoURI = _logoURI;
+        auraMinimum = toWei(1_000);
 
         // sets: from input data.
         ASSET = IERC20(assetAddress);
@@ -191,6 +194,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // sets: initial states.
         isManifested = true;
         isSettable = true;
+
         // sets: native pair if assetAddress is wnative.
         isNativePair = _assetAddress == wnativeAddress;
 
@@ -538,8 +542,11 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // sets: startTime.
         startTime = start;
 
-        // sets: startTime.
+        // sets: endTime.
         endTime = start + duration;
+
+        // activates: deposits and withdrawals.
+        isActive = true;
     }
 
     // [.√.] sets: DAO address (onlyDAO).
@@ -653,6 +660,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(auraAddress != manifester.auraAddress(), 'no change.');
         auraAddress = manifester.auraAddress();
         AURA = IERC20(auraAddress);
+    }
+
+    function setAuraMinimum(uint _minimumAura) external onlySOUL {
+        auraMinimum = _minimumAura;
     }
 
     ///////////////////////////////
