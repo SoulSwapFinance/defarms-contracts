@@ -11,9 +11,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     IManifester public manifester;
 
     address public DAO;
-    address public wnativeAddress;
-    address public usdcAddress;
-    string public nativeSymbol;
 
     address public assetAddress;
     address public depositAddress;
@@ -169,9 +166,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: key data.
         DAO = creatorAddress;
-        wnativeAddress = manifester.wnativeAddress();
-        nativeSymbol = manifester.nativeSymbol();
-        usdcAddress = manifester.usdcAddress();
         logoURI = _logoURI;
         mID = _id;
 
@@ -185,7 +179,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSettable = true;
 
         // sets: native pair if assetAddress is wnative.
-        isNativePair = _assetAddress == wnativeAddress;
+        isNativePair = _assetAddress == manifester.wnativeAddress();
 
         // constructs: name that corresponds to the REWARD.
         name = string(abi.encodePacked('[', uint2str(_id), '] ', ERC20(rewardAddress).name(), ' Farm'));
@@ -590,7 +584,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [.√.] sets: native or stable (onlySOUL, when override is needed).
     function setNativePair(bool enabled) external onlySOUL {
         isNativePair = enabled;
-        assetAddress = enabled ? wnativeAddress : usdcAddress;
+        assetAddress = enabled ? manifester.wnativeAddress() : manifester.usdcAddress();
     }
 
     ///////////////////////////////
