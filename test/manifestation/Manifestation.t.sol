@@ -250,7 +250,7 @@ contract ManifestationTest is Test, Setup {
         vm.stopPrank();
 
         // console.log('isActive: %s', manifestation.isActive());
-        expectFalse(manifestation.isActive());
+        assertFalse(manifestation.isActive());
         console.log('[+] manifestation inactivated successfully.');
 
         // since inactive, deposits and withdraws should fail.

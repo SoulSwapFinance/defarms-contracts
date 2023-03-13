@@ -11,6 +11,8 @@ contract ManifesterScript is Script {
     address public _usdcAddress = 0x04068DA6C83AFCFA0e13ba15A6696662335D5B75;
     address public _wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
     address public _nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
+    address public _enchantressAddress = 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8;
+
     
     uint public _oracleDecimals = 8;
     string public _nativeSymbol = 'NATIVE';
@@ -25,6 +27,7 @@ contract ManifesterScript is Script {
             _usdcAddress,
             _wnativeAddress,
             _nativeOracle, 
+            _enchantressAddress,
             _oracleDecimals,
             _nativeSymbol
         );

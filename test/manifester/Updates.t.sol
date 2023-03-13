@@ -24,4 +24,40 @@ contract UpdatesTest is Test, Setup {
         vm.stopPrank();
         console.log('[+] factory update reverts when caller is not soulDAO (as expected).');
     }
+
+    function testUpdateAuraSettings() public {
+        address auraAddress_0 = manifester.auraAddress();
+        uint auraMinimum_0 = manifester.auraMinimum();
+
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifester.updateAuraAddress(address(0xbabe));
+        address auraAddress_1 = manifester.auraAddress();
+        // console.log('auraAddress: %s', auraAddress_1);
+        vm.stopPrank();
+
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifester.updateAuraMinimum(toWei(100));
+        uint auraMinimum_1 = manifester.auraMinimum();
+        // console.log('auraMinimum: %s', fromWei(auraMinimum_1));
+        vm.stopPrank();
+
+        assertTrue(auraAddress_1 != address(0));
+        console.log('[+] updated auraAddress successfully.');
+        assertFalse(auraAddress_0 == auraAddress_1);
+        assertFalse(auraMinimum_0 == auraMinimum_1);
+        console.log('[+] updated auraMinimum successfully.');
+    }
+
+    function testUpdateSacrifice() public {
+        uint sacrifice_0 = manifester.bloodSacrifice();
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifester.updateSacrifice(10);
+        vm.stopPrank();
+
+        uint sacrifice_1 = manifester.bloodSacrifice();
+        // console.log('sacrifice_0: %s%', fromWei(sacrifice_0));
+        // console.log('sacrifice_1: %s%', fromWei(sacrifice_1));
+        assertFalse(sacrifice_0 == sacrifice_1);
+        console.log('[+] sacrifice updated successfully.');
+    }
 }

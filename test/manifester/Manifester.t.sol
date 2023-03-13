@@ -19,7 +19,7 @@ contract ManifesterTest is Test, Setup {
         // address assetAddress = address(WNATIVE);
         address depositAddress = address(DEPOSIT);
         address rewardAddress = address(REWARD);
-        address enchanterAddress = address(this);
+        address enchanterAddress = ENCHANTRESS_ADDRESS;
 
          // manifestation address //
         (       address _mAddress         ,,,,)       = manifester.mInfo(id);
@@ -64,7 +64,7 @@ contract ManifesterTest is Test, Setup {
         (address enchanter_0, ) = manifester.eInfo(0);
         
         // proves: this contract is enchanter[0].
-        assertEq(enchanter_0, address(this));
+        assertEq(enchanter_0, ENCHANTRESS_ADDRESS);
         console.log('[+] enchanter[0] address is valid.');
 
         // adds: new (unique) address to enchanters.
@@ -77,7 +77,7 @@ contract ManifesterTest is Test, Setup {
 
         // reverts: when adding duplicate address.
         vm.expectRevert();
-        manifester.addEnchanter(address(this));
+        manifester.addEnchanter(ENCHANTRESS_ADDRESS);
         console.log('[+] adding duplicate enchanter[0] reverted (as expected).');
     }
 
@@ -88,7 +88,7 @@ contract ManifesterTest is Test, Setup {
         manifester.addEnchanter(address(0xee));
 
         // expects: both addresses to be enchanted.
-        assertTrue(manifester.enchanted(address(this)));
+        assertTrue(manifester.enchanted(ENCHANTRESS_ADDRESS));
         // console.log('[+] enchanted[0] status verified.');
         assertTrue(manifester.enchanted(address(0xee)));
         // console.log('[+] enchanted[1] status verified.');
