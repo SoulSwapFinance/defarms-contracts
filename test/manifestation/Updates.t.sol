@@ -49,15 +49,6 @@ contract UpdatesTest is Test, Setup {
         console.log('[+] only DAO may set DAO.');
     }
 
-    function testSetSoulDAO() public {
-        vm.startPrank(SOUL_DAO_ADDRESS);
-        manifestation.setSoulDAO(address(0xbae));
-        vm.stopPrank();
-        vm.expectRevert();
-        manifestation.setSoulDAO(address(this));
-        console.log('[+] only soulDAO may set soulDAO.');
-    }
-
     function testLogoURI() public {
         // console.log("logoURI: %s", manifestation.logoURI());
         vm.prank(SOUL_DAO_ADDRESS);
@@ -101,8 +92,8 @@ contract UpdatesTest is Test, Setup {
     }
 
     function testSetNativePair() public {
-        address _assetAddress_0 = manifestation.wnativeAddress();
-        address _assetAddress_1 = manifestation.usdcAddress();
+        address _assetAddress_0 = manifester.wnativeAddress();
+        address _assetAddress_1 = manifester.usdcAddress();
         bool _isNative_0 = true;
         bool _isNative_1 = false;
 

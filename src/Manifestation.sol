@@ -50,9 +50,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     bool private isPendingDAO;
     address private pendingDAO;
 
-    bool private isPendingSoulDAO;
-    address private pendingSoulDAO;
-
     // user info
     struct Users {
         uint amount;                    // deposited amount.
@@ -504,8 +501,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: DAO address (onlyDAO).
     function setDAO(address _pendingDAO) external onlyDAO whileSettable {
-        require(_pendingDAO != address(0), 'cannot set to zero address');
-        require(_pendingDAO != DAO, 'no change requested');
+        require(_pendingDAO != DAO && _pendingDAO != address(0), 'no change requested || address(0)');
 
         // updates: pendingDAO adddress.
         pendingDAO = _pendingDAO;

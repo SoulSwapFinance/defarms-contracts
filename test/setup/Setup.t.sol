@@ -194,12 +194,6 @@ contract Setup is Test {
 
         // sets: addresses for test clarity.
         manifester.setSoulDAO(SOUL_DAO_ADDRESS);
-
-        manifestation.setSoulDAO(SOUL_DAO_ADDRESS);
-        vm.startPrank(SOUL_DAO_ADDRESS);
-        manifestation.acceptSoulDAO();
-        vm.stopPrank();
-
         manifestation.setDAO(DAO_ADDRESS);
         vm.prank(DAO_ADDRESS);
         manifestation.acceptDAO();
