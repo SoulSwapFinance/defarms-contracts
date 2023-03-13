@@ -271,36 +271,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         return multiplier;
     }
 
-    // [..] returns: price per token
-    function getPricePerToken() public view returns (uint pricePerToken) {
-        IERC20 WNATIVE = IERC20(wnativeAddress);
-        IERC20 USDC = IERC20(usdcAddress);
-        // gets: total supply.
-        uint totalSupply = DEPOSIT.totalSupply();
-
-        uint assetPrice = 
-            isNativePair ? uint(IManifester(manifester).getNativePrice()) 
-                : toWei(1);
-
-        uint assetBalance = 
-            isNativePair ? WNATIVE.balanceOf(address(DEPOSIT)) 
-                : USDC.balanceOf(address(DEPOSIT));
-
-        uint assetValue = assetBalance * assetPrice;
-        pricePerToken = assetValue * 2 / totalSupply;
-
-        return pricePerToken;
-    }
-
-    // [..] returns: TVL
-    function getTVL() external view override returns (uint tvl) {
-        uint _pricePerToken = getPricePerToken();
-        uint _totalDeposited = getTotalDeposit();
-        tvl = _totalDeposited * _pricePerToken;
-
-        return tvl;
-    }
-
     // [.√.] returns: the total amount of deposited tokens.
     function getTotalDeposit() public view override returns (uint _totalDeposited) {
         _totalDeposited = totalDeposited;

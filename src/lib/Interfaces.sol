@@ -39,7 +39,6 @@ interface IManifestation {
     function startTime() external returns (uint);
     function endTime() external returns (uint);
 
-    function getTVL() external returns (uint);
     function getTotalDeposit() external returns (uint);
 }
 
