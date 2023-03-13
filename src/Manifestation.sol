@@ -11,7 +11,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     IManifester public manifester;
 
     address public DAO;
-    address public soulDAO;
     address public wnativeAddress;
     address public usdcAddress;
     string public nativeSymbol;
@@ -19,18 +18,15 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     address public assetAddress;
     address public depositAddress;
     address public rewardAddress;
-    address public auraAddress;
 
     IERC20 private DEPOSIT;
     IERC20 private ASSET;
     IERC20 private REWARD;
-    IERC20 private AURA;
 
     string public override name;
     string public override symbol;
     string public override logoURI;
-    
-    uint public auraMinimum;
+
     uint public duraDays;
     uint public feeDays;
     uint public dailyReward;
@@ -44,6 +40,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     uint public override startTime;
     uint public override endTime;
+    uint public override mID;
 
     bool public isNativePair;
     bool public isManifested;
@@ -91,15 +88,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         _;
     }
 
-    modifier whilePendingSoulDAO {
-        require(isPendingSoulDAO, 'only available while pending soulDAO transfer');
-        require(pendingSoulDAO == msg.sender, 'only the pending soulDAO may accept ownership');
-        _;
-    }
-
     // proxy for pausing contract.
     modifier isDepositable(uint amount) {
-        require(AURA.balanceOf(msg.sender) > auraMinimum, 'insufficient AURA for deposits');
+        IERC20 AURA = IERC20(manifester.auraAddress());
+        require(AURA.balanceOf(msg.sender) >= manifester.auraMinimum(), 'insufficient AURA for deposits');
         require(amount > 0, 'cannot deposit zero');
         require(block.timestamp <= endTime, 'the reward period has ended');
         // recall: isActive is first activated upon setting start and end times.
@@ -124,7 +116,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] designates: soul access (for (rare) overrides).
     modifier onlySOUL() {
-        require(soulDAO == msg.sender, "onlySOUL: caller is not the soulDAO address");
+        require(manifester.soulDAO() == msg.sender, "onlySOUL: caller is not the soulDAO address");
         _;
     }
 
@@ -177,17 +169,14 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: key data.
         DAO = creatorAddress;
-        soulDAO = manifester.soulDAO();
-        auraAddress = manifester.auraAddress();
         wnativeAddress = manifester.wnativeAddress();
         nativeSymbol = manifester.nativeSymbol();
         usdcAddress = manifester.usdcAddress();
         logoURI = _logoURI;
-        auraMinimum = toWei(1_000);
+        mID = _id;
 
         // sets: from input data.
         ASSET = IERC20(assetAddress);
-        AURA = IERC20(auraAddress);
         DEPOSIT = IERC20(depositAddress);
         REWARD = IERC20(rewardAddress);
 
@@ -598,42 +587,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         logoURI = _logoURI;
     }
 
-    // [.√.] sets: pendingSoulDAO address (onlySOUL).
-    function setSoulDAO(address _pendingSoulDAO) external onlySOUL {
-        require(_pendingSoulDAO != address(0), 'cannot set to zero address');
-        require(_pendingSoulDAO != soulDAO, 'no change requested');
-
-        // updates: pendingDAO adddress.
-        pendingSoulDAO = _pendingSoulDAO;
-        // sets: isPending DAO to true.
-        isPendingSoulDAO = true;
-    }
-
-    // [.√.] sets: soulDAO address while preventing lockout (whilePendingSoulDAO).
-    function acceptSoulDAO() external whilePendingSoulDAO {
-        // sets: isPendingSoulDAO to false.
-        isPendingSoulDAO = false;
-        // updates: soulDAO adddress.
-        soulDAO = msg.sender;
-
-        emit UpdatedSoulDAO(soulDAO, block.timestamp);
-    }
-
     // [.√.] sets: native or stable (onlySOUL, when override is needed).
     function setNativePair(bool enabled) external onlySOUL {
         isNativePair = enabled;
         assetAddress = enabled ? wnativeAddress : usdcAddress;
-    }
-
-    // [..] updates: auraAddress (onlySoul).
-    function updateAuraAddress() external onlySOUL {
-        require(auraAddress != manifester.auraAddress(), 'no change.');
-        auraAddress = manifester.auraAddress();
-        AURA = IERC20(auraAddress);
-    }
-
-    function setAuraMinimum(uint _minimumAura) external onlySOUL {
-        auraMinimum = _minimumAura;
     }
 
     ///////////////////////////////

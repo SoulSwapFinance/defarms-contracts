@@ -36,6 +36,7 @@ contract Manifester is IManifester {
     address public override auraAddress;
     address public override usdcAddress;
 
+    uint public override auraMinimum;
     uint public bloodSacrifice;
     bool public isPaused;
 
@@ -417,6 +418,18 @@ contract Manifester is IManifester {
         isPaused = enabled;
 
         emit Paused(enabled);
+    }
+
+    // [..] updates: minimum aura for deposits.
+    function updateAuraMinimum(uint _minimumAura) external onlySOUL {
+        require(auraMinimum != _minimumAura, 'no change requested.');
+        auraMinimum = _minimumAura;
+    }
+
+    // [..] updates: aura address.
+    function updateAuraAddress(address _auraAddress) external onlySOUL {
+        require(auraAddress != _auraAddress, 'no change requested.');
+        auraAddress = _auraAddress;
     }
 
     ////////////////////////////////

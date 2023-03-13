@@ -38,6 +38,7 @@ interface IManifestation {
 
     function startTime() external returns (uint);
     function endTime() external returns (uint);
+    function mID() external returns (uint);
 
     function getTotalDeposit() external returns (uint);
 }
@@ -49,6 +50,7 @@ interface IManifester {
     function auraAddress() external returns (address);
     function nativeSymbol() external returns (string memory);
     function getNativePrice() external view returns (int);
+    function auraMinimum() external returns (uint);
 }
 
 interface IOracle {
