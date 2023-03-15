@@ -21,7 +21,6 @@ contract Manifester is IManifester {
     Enchanters[] public eInfo;
 
     address[] public manifestations;
-    address[] public creators;
     // checks: whether already an enchanter.
     mapping(address => bool) public enchanted; 
 
@@ -110,9 +109,6 @@ contract Manifester is IManifester {
 
         // creates: the first Enchanter[0].
         addEnchanter(_enchantress);
-
-        // increments [+]: totalEnchanters.
-        totalEnchanters ++;
     }
 
     // [.√.] creates: Manifestation
@@ -152,9 +148,6 @@ contract Manifester is IManifester {
 
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
-
-        // stores: creator to the creators[] array
-        creators.push(msg.sender);
 
         // increments: the total number of manifestations
         totalManifestations++;
@@ -204,9 +197,6 @@ contract Manifester is IManifester {
         // stores manifestation to the manifestations[] array
         manifestations.push(manifestation);
 
-        // stores: creator to the creators[] array
-        creators.push(msg.sender);
-
         // increments: the total number of manifestations
         totalManifestations++;
 
@@ -222,13 +212,6 @@ contract Manifester is IManifester {
         _initializeManifestation(id, duraDays, feeDays, dailyReward, logoURI);
     
         emit SummonedManifestation(id, depositAddress, rewardAddress, msg.sender, enchanterAddress, manifestation, logoURI);
-    }
-
-    function generateManifestation(address depositAddress, uint id) public returns (address manifestation) {
-        // generates: creation code, salt, then assembles a create2Address for the new manifestation.
-        bytes memory bytecode = type(Manifestation).creationCode;
-        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
-        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
     }
 
     // [.√.] initializes: manifestation
@@ -254,6 +237,7 @@ contract Manifester is IManifester {
         _launchManifestation(id, duraDays, feeDays, dailyReward);
     }
 
+    // [.√.] sets: reward, sacrifice && transfers: reward fee split (DAO, Enchanter).
     function _launchManifestation(uint id, uint duraDays, uint feeDays, uint dailyReward) internal returns (bool) {
 
         // gets: stored manifestation info by id.
@@ -290,6 +274,14 @@ contract Manifester is IManifester {
     //////////////////////////////
         /*/ VIEW FUNCTIONS /*/
     //////////////////////////////
+
+    // [.√.] returns: generated manifestation address.
+    function generateManifestation(address depositAddress, uint id) public returns (address manifestation) {
+        // generates: creation code, salt, then assembles a create2Address for the new manifestation.
+        bytes memory bytecode = type(Manifestation).creationCode;
+        bytes32 salt = keccak256(abi.encodePacked(depositAddress, id));
+        assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
+    }
 
     // [.√.] returns: native price.
     function getNativePrice() public view override returns (int) {
@@ -368,6 +360,7 @@ contract Manifester is IManifester {
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
+
     // [.√.] adds: Enchanter (instance).
     function addEnchanter(address _account) public onlySOUL {     
         require(!enchanted[_account], "already an enchanter");
