@@ -187,8 +187,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: rewards (callable from manifester)
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
-        // note: below isn't necessary, so long as maifester contract sets up only upon creation.
-        // require(!isSetup, 'already setup');
 
         // sets: key info.
         duraDays = _duraDays;

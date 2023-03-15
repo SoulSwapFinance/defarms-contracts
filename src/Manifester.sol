@@ -300,11 +300,6 @@ contract Manifester is IManifester {
     }
 
     // used for UIs.
-    function getManifestationsByManifester(address _manifester) view external returns (uint[] memory) { 
-        return manifestationsByManifester[_manifester]; 
-    }
-
-    // used for UIs.
     function getManifestations() view external returns (uint[] memory) { 
         return manifestationsByManifester[address(this)]; 
     }
