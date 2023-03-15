@@ -21,14 +21,12 @@ contract Manifester is IManifester {
     Enchanters[] public eInfo;
 
     address[] public manifestations;
+    mapping(address => uint[]) public manifestationsByManifester; 
+
     // checks: whether already an enchanter.
     mapping(address => bool) public enchanted; 
 
     address public override soulDAO;
-
-    // [.√.] immatable oracle constants
-    IOracle private immutable nativeOracle;
-    uint private immutable oracleDecimals;
 
     string public override nativeSymbol;
     address public override wnativeAddress;
@@ -65,6 +63,7 @@ contract Manifester is IManifester {
     event Enchanted(uint id, address account, bool isActive);
     event UpdatedSacrifice(uint sacrifice);
     event UpdatedDAO(address dao);
+    event DelaySet(uint id, address mAddress, address msgSender, uint delayDays);
 
     // [.√.] proxy for pausing contract.
     modifier whileActive {
@@ -90,9 +89,7 @@ contract Manifester is IManifester {
         address _auraAddress,
         address _usdcAddress,
         address _wnativeAddress,
-        address _nativeOracle, 
         address _enchantress,
-        uint _oracleDecimals,
         string memory _nativeSymbol
     ) {
         SoulSwapFactory = ISoulSwapFactory(_factoryAddress);
@@ -104,8 +101,6 @@ contract Manifester is IManifester {
         usdcAddress = _usdcAddress;
         wnativeAddress = _wnativeAddress;
         soulDAO = msg.sender;
-        nativeOracle = IOracle(_nativeOracle);
-        oracleDecimals = _oracleDecimals;
 
         // creates: the first Enchanter[0].
         addEnchanter(_enchantress);
@@ -146,8 +141,11 @@ contract Manifester is IManifester {
         // generates: creation code, salt, then assembles a create2Address for the new manifestation.
         manifestation = generateManifestation(depositAddress, id);
 
-        // stores manifestation to the manifestations[] array
+        // stores: manifestation to the manifestations[] array.
         manifestations.push(manifestation);
+
+        // stores: manifested to the manifester[] array.
+        manifestationsByManifester[address(this)].push(id);
 
         // increments: the total number of manifestations
         totalManifestations++;
@@ -283,12 +281,6 @@ contract Manifester is IManifester {
         assembly { manifestation := create2(0, add(bytecode, 32), mload(bytecode), salt) }
     }
 
-    // [.√.] returns: native price.
-    function getNativePrice() public view override returns (int) {
-        int latestAnswer = IOracle(nativeOracle).latestAnswer();
-        return latestAnswer;
-    }
-
     // [.√.] returns: sacrificial split between DAO & enchanter.
     function getSplit(uint sacrifice) public pure returns (uint toDAO, uint toEnchanter) {
         toEnchanter = sacrifice / 5; // 80%
@@ -305,6 +297,16 @@ contract Manifester is IManifester {
     function getSacrifice(uint _rewards) public view returns (uint) {
         uint sacrifice = (_rewards * bloodSacrifice) / 100;
         return sacrifice;
+    }
+
+    // used for UIs.
+    function getManifestationsByManifester(address _manifester) view external returns (uint[] memory) { 
+        return manifestationsByManifester[_manifester]; 
+    }
+
+    // used for UIs.
+    function getManifestations() view external returns (uint[] memory) { 
+        return manifestationsByManifester[address(this)]; 
     }
 
     // [.√.] returns: info for a given id.
@@ -357,13 +359,23 @@ contract Manifester is IManifester {
         return (mAddress, amount, rewardDebt, withdrawTime, depositTime, timeDelta, deltaDays);
     }
 
+    // [.√.] sets: delay from Manifester --> Manifestation.
+    function setDelay(uint id, uint delayDays) external {
+        address mAddress = address(manifestations[id]);
+        Manifestation manifestation = Manifestation(mAddress);
+        // inputs: requestor, delayDays.
+        manifestation.setDelay(msg.sender, delayDays);
+
+        emit DelaySet(id, mAddress, msg.sender, delayDays);
+    }
+
     ///////////////////////////////
         /*/ ADMIN FUNCTIONS /*/
     ///////////////////////////////
 
     // [.√.] adds: Enchanter (instance).
     function addEnchanter(address _account) public onlySOUL {     
-        require(!enchanted[_account], "already an enchanter");
+        require(!enchanted[_account], "already enchanted");
         // appends and populates: a new Enchanter struct (instance).
         eInfo.push(Enchanters({
             account: _account,        // address account;
@@ -400,7 +412,7 @@ contract Manifester is IManifester {
 
     // [.√.] updates: sacrifice amount.
     function updateSacrifice(uint _sacrifice) external onlySOUL {
-        require(_sacrifice <= 100, 'cannot exceed 100%.');
+        require(_sacrifice <= 100, 'exceeds 100%.');
         bloodSacrifice = toWei(_sacrifice);
 
         emit UpdatedSacrifice(_sacrifice);
@@ -415,13 +427,13 @@ contract Manifester is IManifester {
 
     // [.√.] updates: minimum aura for deposits.
     function updateAuraMinimum(uint _minimumAura) external onlySOUL {
-        require(auraMinimum != _minimumAura, 'no change requested.');
+        require(auraMinimum != _minimumAura, 'no change.');
         auraMinimum = _minimumAura;
     }
 
     // [.√.] updates: aura address.
     function updateAuraAddress(address _auraAddress) external onlySOUL {
-        require(auraAddress != _auraAddress, 'no change requested.');
+        require(auraAddress != _auraAddress, 'no change.');
         auraAddress = _auraAddress;
     }
 

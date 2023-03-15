@@ -42,7 +42,7 @@ contract Setup is Test {
     address public WNATIVE_ADDRESS;
 
     // numeric constants //
-    uint public immutable ORACLE_DECIMALS = 8;
+    // uint public immutable ORACLE_DECIMALS = 8;
     uint public immutable DURA_DAYS = 90;
     // uint public immutable DELAY_DAYS = 1;
     uint public immutable FEE_DAYS = 14;
@@ -57,7 +57,7 @@ contract Setup is Test {
     address internal CREATOR_ADDRESS = address(this);
 
     // addresses //
-    address public NATIVE_ORACLE_ADDRESS = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
+    // address public NATIVE_ORACLE_ADDRESS = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc; // FTM [250]
     address public ENCHANTRESS_ADDRESS = 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8;
 
     // initializes tokens, pairs
@@ -114,9 +114,9 @@ contract Setup is Test {
             AURA_ADDRESS,
             USDC_ADDRESS,
             WNATIVE_ADDRESS,
-            NATIVE_ORACLE_ADDRESS,
+            // NATIVE_ORACLE_ADDRESS,
             ENCHANTRESS_ADDRESS,
-            ORACLE_DECIMALS,
+            // ORACLE_DECIMALS,
             WNATIVE.symbol()
         );
         MANIFESTER_ADDRESS = address(manifester);
@@ -172,7 +172,14 @@ contract Setup is Test {
         
         // sets: start time, end time
         // console.log('setting delay...');
-        manifestation.setDelay(0);
+        // id, delayDays
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        vm.expectRevert();
+        manifester.setDelay(0, 0);
+        vm.stopPrank();
+        // console.log('[+] delay reverts when non-DAO sets delay.');
+
+        manifester.setDelay(0, 0);
         // console.log('[+] delay set successfully.');
 
         // unpauses: Manifestation[0].

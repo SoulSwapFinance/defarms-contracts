@@ -49,14 +49,7 @@ interface IManifester {
     function wnativeAddress() external returns (address);
     function auraAddress() external returns (address);
     function nativeSymbol() external returns (string memory);
-    function getNativePrice() external view returns (int);
     function auraMinimum() external returns (uint);
-}
-
-interface IOracle {
-  function latestAnswer() external view returns (int256);
-  function decimals() external view returns (uint8);
-  function latestTimestamp() external view returns (uint256);
 }
 
 // File: contracts/interfaces/ISoulSwapFactory.sol

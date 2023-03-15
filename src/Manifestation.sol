@@ -154,7 +154,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         address _rewardAddress,
         string memory _logoURI
         ) external onlyManifester {
-        require(!isManifested, 'initialize once');
+        require(!isManifested, 'init. once');
 
         creatorAddress = _creatorAddress;
         assetAddress = _assetAddress;
@@ -328,7 +328,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         require(pendingReward > 0, 'there is nothing to harvest');
 
         // ensures: only a full payout is made, else fails.
-        require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+        require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance');
         
         // transfers: reward token to user.
         REWARD.safeTransfer(msg.sender, pendingReward);
@@ -354,7 +354,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
                 // [if] rewards pending, [then] transfer to user.
                 if(pendingReward > 0) { 
                     // [then] ensures: only a full payout is made, else fails.
-                    require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+                    require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance');
                     REWARD.safeTransfer(msg.sender, pendingReward);
                 }
         }
@@ -474,27 +474,21 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     ////////////////////////////////
 
     // [.√.] sets: startTime & endTime (onlyDAO)
-    function setDelay(uint delayDays) external onlyDAO {
-        require(startTime == 0, 'startTime has already been set');
-        
+    function setDelay(address requestor, uint delayDays) external onlyManifester {
+        require(requestor == DAO, 'only the DAO may start.');
+        require(startTime == 0, 'startTime set.');
+
         // converts: delayDays into a unix timeDelay variable (in seconds).
         uint timeDelay = delayDays * 1 days;
-
-        // calculates: start (in seconds) as now + timeDelay.
-        uint start = block.timestamp + timeDelay;
         
-        // ensures: start time has not yet past.
-        require(start >= block.timestamp, 'start must be in the future');
-
-        // calculates: duration (in seconds)
-        require(duraDays !=0, 'duration must be set');
+        // sets: duration.
         uint duration = duraDays * 1 days;
         
         // sets: startTime.
-        startTime = start;
+        startTime = block.timestamp + timeDelay;
 
         // sets: endTime.
-        endTime = start + duration;
+        endTime = startTime + duration;
 
         // activates: deposits and withdrawals.
         isActive = true;
@@ -502,7 +496,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: DAO address (onlyDAO).
     function setDAO(address _pendingDAO) external onlyDAO whileSettable {
-        require(_pendingDAO != DAO && _pendingDAO != address(0), 'no change requested || address(0)');
+        require(_pendingDAO != DAO && _pendingDAO != address(0), 'no change || address(0)');
 
         // updates: pendingDAO adddress.
         pendingDAO = _pendingDAO;
@@ -540,10 +534,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     // [.√.] overrides: feeDays (onlySOUL)
     function setFeeDaysOverride(uint _feeDays) external onlySOUL {
         // gets: current fee days & ensures distinction (pool)
-        require(feeDays != toWei(_feeDays), 'no change requested');
+        require(feeDays != toWei(_feeDays), 'no change.');
         
         // limits: feeDays by default maximum of 30 days.
-        require(toWei(_feeDays) <= toWei(30), 'exceeds a month of fees');
+        require(toWei(_feeDays) <= toWei(30), 'exceeds 30 days.');
         
         // updates: fee days (pool)
         feeDays = toWei(_feeDays);
