@@ -60,4 +60,43 @@ contract UpdatesTest is Test, Setup {
         assertFalse(sacrifice_0 == sacrifice_1);
         console.log('[+] sacrifice updated successfully.');
     }
+
+    function testUpdateAura() public {
+        uint _auraMinimum = toWei(100);
+        address _auraAddress = address(0xeaeaea);
+        uint auraMinimum_0 = manifester.auraMinimum();
+        address auraAddress_0 = manifester.auraAddress();
+        // console.log('min0. %s', manifester.auraMinimum());
+        // console.log('aura0. %s', manifester.auraAddress());
+
+        // update auraMinimum //
+        vm.expectRevert();
+        manifester.updateAuraMinimum(_auraMinimum);
+        console.log('[+] reverts when non-soulDAO updates aura minimum');
+
+        vm.prank(SOUL_DAO_ADDRESS);
+        manifester.updateAuraMinimum(_auraMinimum);
+        vm.stopPrank();
+
+        uint auraMinimum_1 = manifester.auraMinimum();
+        assertTrue(_auraMinimum == auraMinimum_1 && auraMinimum_0 != auraMinimum_1);
+        console.log('[+] auraMinimum updated successfully.');
+
+        // update auraAddress //
+        vm.expectRevert();
+        manifester.updateAuraAddress(_auraAddress);
+        console.log('[+] reverts when non-soulDAO updates aura address');
+
+        vm.prank(SOUL_DAO_ADDRESS);
+        manifester.updateAuraAddress(_auraAddress);
+        vm.stopPrank();
+
+        address auraAddress_1 = manifester.auraAddress();
+        assertTrue(_auraAddress == auraAddress_1 && auraAddress_0 != auraAddress_1);
+        console.log('[+] auraAddress updated successfully.');
+
+        // console.log('min0. %s', manifester.auraMinimum());
+        // console.log('aura0. %s', manifester.auraAddress());
+
+    }
 }

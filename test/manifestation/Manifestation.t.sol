@@ -76,7 +76,7 @@ contract ManifestationTest is Test, Setup {
         _deposit(amount);
        
         uint _withdrawAmount = amount;
-        uint bal_0_M0 = manifestation.getTotalDeposit();
+        uint bal_0_M0 = manifestation.totalDeposited();
         _withdraw(_withdrawAmount);
         uint bal_1_M0 = manifestation.totalDeposited();
         uint withdrawAmount = bal_0_M0 - bal_1_M0;

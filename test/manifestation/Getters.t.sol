@@ -65,7 +65,7 @@ contract GettersTest is Test, Setup {
         vm.warp(2 days);
         _deposit(toWei(200));
         uint _totalDeposit = toWei(300);
-        uint totalDeposit = manifestation.getTotalDeposit();
+        uint totalDeposit = manifestation.totalDeposited();
         // console.log('totalDeposit: %s', fromWei(totalDeposit));
         assertEq(totalDeposit, _totalDeposit);
         console.log('[+] total deposit reported accurately.');

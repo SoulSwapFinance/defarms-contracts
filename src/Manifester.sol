@@ -5,7 +5,8 @@ import './Manifestation.sol';
 
 contract Manifester is IManifester {
     using SafeERC20 for IERC20;
-    bytes32 public constant INIT_CODE_PAIR_HASH = keccak256(abi.encodePacked(type(Manifestation).creationCode));
+    bytes32 public constant INIT_CODE_PAIR_HASH 
+        = keccak256(abi.encodePacked(type(Manifestation).creationCode));
 
     ISoulSwapFactory public SoulSwapFactory;
     uint public totalManifestations;
@@ -67,13 +68,13 @@ contract Manifester is IManifester {
 
     // [.√.] proxy for pausing contract.
     modifier whileActive {
-        require(!isPaused, 'contract is currently paused');
+        require(!isPaused, 'paused.');
         _;
     }
 
     // [.√.] restricts: certain functions to soulDAO-only.
     modifier onlySOUL() {
-        require(soulDAO == msg.sender, "onlySOUL: caller is not the soulDAO address");
+        require(soulDAO == msg.sender, 'onlySOUL.');
         _;
     }
 
@@ -299,7 +300,7 @@ contract Manifester is IManifester {
         return sacrifice;
     }
 
-    // used for UIs.
+    // [.√.] used for UI.
     function getManifestations() view external returns (uint[] memory) { 
         return manifestationsByManifester[address(this)]; 
     }
@@ -370,7 +371,7 @@ contract Manifester is IManifester {
 
     // [.√.] adds: Enchanter (instance).
     function addEnchanter(address _account) public onlySOUL {     
-        require(!enchanted[_account], "already enchanted");
+        require(!enchanted[_account], 'already enchanted.');
         // appends and populates: a new Enchanter struct (instance).
         eInfo.push(Enchanters({
             account: _account,        // address account;

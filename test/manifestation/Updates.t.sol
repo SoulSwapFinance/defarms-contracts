@@ -53,7 +53,7 @@ contract UpdatesTest is Test, Setup {
         // console.log("logoURI: %s", manifestation.logoURI());
         vm.prank(SOUL_DAO_ADDRESS);
         string memory logoURI = "https://raw.githubusercontent.com/soulswapfinance/assets/prod/blockchains/fantom/assets/0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07/logo.png";
-        manifestation.setLogoURI('https://raw.githubusercontent.com/soulswapfinance/assets/prod/blockchains/fantom/assets/0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07/logo.png');
+        manifestation.updateLogoURI('https://raw.githubusercontent.com/soulswapfinance/assets/prod/blockchains/fantom/assets/0xe2fb177009FF39F52C0134E8007FA0e4BaAcBd07/logo.png');
         string memory _logoURI = manifestation.logoURI();
         // console.log("logoURI: %s", manifestation.logoURI());
         assertEq(logoURI, _logoURI);
@@ -158,5 +158,22 @@ contract UpdatesTest is Test, Setup {
         
         assertEq(isReclaimable_0, isReclaimable_1);
         console.log('[+] reclaimable state not updated (as expected).');
+    }
+
+    function testUpdateManifester() public {
+        address _manifesterAddress = address(0xeaeee);
+        address manifesterAddress_0 = address(manifestation.Manifester());
+
+        vm.expectRevert();
+        manifestation.updateManifester(_manifesterAddress);
+        console.log('[+] reverts when non-soulDAO updates Manifester.');
+
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        manifestation.updateManifester(_manifesterAddress);
+        vm.stopPrank();
+
+        address manifesterAddress_1 = address(manifestation.Manifester());
+        assertTrue(manifesterAddress_0 != manifesterAddress_1);
+        console.log('[+] Manifester updated successfully');
     }
 }

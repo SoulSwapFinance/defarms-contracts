@@ -39,8 +39,7 @@ interface IManifestation {
     function startTime() external returns (uint);
     function endTime() external returns (uint);
     function mID() external returns (uint);
-
-    function getTotalDeposit() external returns (uint);
+    function totalDeposited() external returns (uint);
 }
 
 interface IManifester {

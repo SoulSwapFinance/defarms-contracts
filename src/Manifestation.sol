@@ -8,10 +8,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public creatorAddress;
-    IManifester public manifester;
+    IManifester public Manifester;
 
     address public DAO;
-
     address public assetAddress;
     address public depositAddress;
     address public rewardAddress;
@@ -33,8 +32,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     uint public lastRewardTime;
 
     // tracks to ensure only +/- accounted for.
-    uint public totalDeposited;
-
+    uint public override totalDeposited;
     uint public override startTime;
     uint public override endTime;
     uint public override mID;
@@ -77,52 +75,50 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     modifier whilePendingDAO {
-        require(isPendingDAO, 'only available while pending DAO transfer');
-        require(pendingDAO == msg.sender, 'only the pending DAO may accept ownership');
+        require(isPendingDAO, 'only available while pending DAO transfer.');
         _;
     }
 
     // proxy for pausing contract.
     modifier isDepositable(uint amount) {
-        IERC20 AURA = IERC20(manifester.auraAddress());
-        require(AURA.balanceOf(msg.sender) >= manifester.auraMinimum(), 'insufficient AURA for deposits');
-        require(amount > 0, 'cannot deposit zero');
-        require(block.timestamp <= endTime, 'the reward period has ended');
+        require(IERC20(Manifester.auraAddress()).balanceOf(msg.sender) >= Manifester.auraMinimum(), 'insufficient AURA.');
+        require(amount > 0, 'cannot deposit zero.');
+        require(block.timestamp <= endTime, 'reward period has ended.');
         // recall: isActive is first activated upon setting start and end times.
-        require(isActive, 'contract is currently paused');
+        require(isActive, 'paused');
         _;
     }
 
     // proxy for pausing contract.
     modifier isWithdrawable(uint amount) {
-        require(amount > 0, 'cannot withdraw zero');
-        require(block.timestamp >= startTime, 'rewards have not yet begun');
+        require(amount > 0, 'cannot withdraw zero.');
+        require(block.timestamp >= startTime, 'rewards have not yet begun.');
         // recall: isActive is first activated upon setting start and end times.
-        require(isActive, 'contract is currently paused');
+        require(isActive, 'paused');
         _;
     }
 
     // [.√.] proxy for setting contract.
     modifier whileSettable {
-        require(isSettable, 'contract is currently not settable');
+        require(isSettable, 'not settable');
         _;
     }
 
     // [.√.] designates: soul access (for (rare) overrides).
     modifier onlySOUL() {
-        require(manifester.soulDAO() == msg.sender, "onlySOUL: caller is not the soulDAO address");
+        require(Manifester.soulDAO() == msg.sender, "onlySOUL");
         _;
     }
 
     // [.√.] ensures: only the DAO address is the sender.
     modifier onlyDAO() {
-        require(DAO == msg.sender, "onlyDAO: caller is not the DAO address");
+        require(DAO == msg.sender, "onlyDAO");
         _;
     }
 
     // [.√.] ensures: only the Manifester address is the sender.
     modifier onlyManifester() {
-        require(address(manifester) == msg.sender, "onlyManifester: caller is not the Manifester address");
+        require(address(Manifester) == msg.sender, "onlyManifester");
         _;
     }
 
@@ -132,20 +128,20 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     event EmergencyWithdrawn(address indexed user, uint amount, uint timestamp);
 
     event Manifested(string name, string symbol, address creatorAddress, address assetAddress, address depositAddress, address rewardAddress, uint timestamp);
-    event RewardsReclaimed(address msgSender, uint amount);
+    event RewardsReclaimed(address msgSender, uint amount, uint timestamp);
     event UpdatedDAO(address DAO, uint timestamp);
-    event UpdatedSoulDAO(address soulDAO, uint timestamp);
 
     event ActiveToggled(bool enabled, address msgSender, uint timestamp);
+    event RewardsSet(uint duraDays, uint feeDays, uint dailyReward, uint timestamp);
     event ReclaimableToggled(bool enabled, address msgSender, uint timestamp);
     event FeeDaysUpdated(uint feeDays, uint timestamp);
 
-    // [.√.] sets the manifester at creation //
+    // [.√.] sets the Manifester at creation //
     constructor() {
-        manifester = IManifester(msg.sender);
+        Manifester = IManifester(msg.sender);
     }
 
-    // [.√.] initializes: manifestation by the manifester (at creation).
+    // [.√.] initializes: manifestation by the Manifester (at creation).
     function manifest(
         uint _id,
         address _creatorAddress,
@@ -154,7 +150,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         address _rewardAddress,
         string memory _logoURI
         ) external onlyManifester {
-        require(!isManifested, 'init. once');
+        require(!isManifested, 'init. once.');
 
         creatorAddress = _creatorAddress;
         assetAddress = _assetAddress;
@@ -176,16 +172,16 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSettable = true;
 
         // sets: native pair if assetAddress is wnative.
-        isNativePair = _assetAddress == manifester.wnativeAddress();
+        isNativePair = _assetAddress == Manifester.wnativeAddress();
 
         // constructs: name that corresponds to the REWARD.
-        name = string(abi.encodePacked('[', uint2str(_id), '] ', ERC20(rewardAddress).name(), ' Farm'));
+        name = string(abi.encodePacked('[', stringifyUint(_id), '] ', ERC20(rewardAddress).name(), ' Farm'));
         symbol = string(abi.encodePacked(ERC20(rewardAddress).symbol()));
 
         emit Manifested(name, symbol, creatorAddress, assetAddress, depositAddress, rewardAddress, block.timestamp);
     }
 
-    // [.√.] sets: rewards (callable from manifester)
+    // [.√.] sets: rewards (callable from Manifester)
     function setRewards(uint _duraDays, uint _feeDays, uint _dailyReward) external onlyManifester {
 
         // sets: key info.
@@ -197,6 +193,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // sets: setup state.
         isSetup = true;
+
+        emit RewardsSet(_duraDays, _feeDays, _dailyReward, block.timestamp);
     }
 
     // [.√.] updates: rewards, so that they are accounted for.
@@ -247,12 +245,6 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         multiplier = to - from;
 
         return multiplier;
-    }
-
-    // [.√.] returns: the total amount of deposited tokens.
-    function getTotalDeposit() public view override returns (uint _totalDeposited) {
-        _totalDeposited = totalDeposited;
-        return _totalDeposited;
     }
 
     // [.√.] returns: user delta is the time since user either last withdrew OR first deposited OR 0.
@@ -323,10 +315,10 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
         // gets: pendingRewards and requires pending reward.
         uint pendingReward = user.amount * accRewardPerShare / 1e12 - user.rewardDebt;
-        require(pendingReward > 0, 'there is nothing to harvest');
+        require(pendingReward > 0, 'nothing to harvest.');
 
         // ensures: only a full payout is made, else fails.
-        require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance');
+        require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance.');
         
         // transfers: reward token to user.
         REWARD.safeTransfer(msg.sender, pendingReward);
@@ -352,7 +344,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
                 // [if] rewards pending, [then] transfer to user.
                 if(pendingReward > 0) { 
                     // [then] ensures: only a full payout is made, else fails.
-                    require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance');
+                    require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance.');
                     REWARD.safeTransfer(msg.sender, pendingReward);
                 }
         }
@@ -383,7 +375,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // gets: stored data for the account.
         Users storage user = userInfo[msg.sender];
 
-        require(user.amount >= amount, 'withdrawal exceeds deposit');
+        require(user.amount >= amount, 'exceeds deposit.');
         
         // helps: manage calculations.
         update();
@@ -394,7 +386,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // [if] rewards are pending, [then] send rewards to user.
         if(pendingReward > 0) { 
             // ensures: only a full payout is made, else fails.
-            require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient balance for reward payout');
+            require(REWARD.balanceOf(address(this)) >= pendingReward, 'insufficient payout balance.');
             REWARD.safeTransfer(msg.sender, pendingReward); 
         }
 
@@ -435,7 +427,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         // gets: pool & user data (to update later).
         Users storage user = userInfo[msg.sender];
         uint withdrawAmount = user.amount;
-        require(withdrawAmount > 0, 'nothing to withdraw');
+        require(withdrawAmount > 0, 'nothing to withdraw.');
 
         // helps: manage calculations.
         update();
@@ -473,10 +465,12 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: startTime & endTime (onlyDAO)
     function setDelay(address requestor, uint delayDays) external onlyManifester {
-        require(requestor == DAO, 'only the DAO may start.');
-        require(startTime == 0, 'startTime set.');
+        // checks: requestor is the DAO address.
+        require(requestor == DAO, 'onlyDAO.');
+        // checks: startTime has not yet been set.
+        require(startTime == 0, 'start set.');
 
-        // converts: delayDays into a unix timeDelay variable (in seconds).
+        // converts: delayDays into a unix timeDelay variable (in secs).
         uint timeDelay = delayDays * 1 days;
         
         // sets: duration.
@@ -494,7 +488,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: DAO address (onlyDAO).
     function setDAO(address _pendingDAO) external onlyDAO whileSettable {
-        require(_pendingDAO != DAO && _pendingDAO != address(0), 'no change || address(0)');
+        require(_pendingDAO != DAO && _pendingDAO != address(0), 'no change || address(0).');
 
         // updates: pendingDAO adddress.
         pendingDAO = _pendingDAO;
@@ -504,6 +498,8 @@ contract Manifestation is IManifestation, ReentrancyGuard {
 
     // [.√.] sets: DAO address while preventing lockout (whilePendingDAO).
     function acceptDAO() external whilePendingDAO {
+        // checks: sender is the pendingDAO.
+        require(pendingDAO == msg.sender, 'only pending DAO may accept.');
         // sets: isPendingDAO to false.
         isPendingDAO = false;
         // updates: DAO adddress.
@@ -517,7 +513,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         uint balance = REWARD.balanceOf(address(this));
         REWARD.safeTransfer(DAO, balance);
 
-        emit RewardsReclaimed(msg.sender, balance);
+        emit RewardsReclaimed(msg.sender, balance, block.timestamp);
     }
 
     //////////////////////////////////////////
@@ -566,14 +562,19 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     }
 
     // [.√.] overrides: logoURI (onlySOUL).
-    function setLogoURI(string memory _logoURI) external onlySOUL {
+    function updateLogoURI(string memory _logoURI) external onlySOUL {
         logoURI = _logoURI;
     }
 
     // [.√.] sets: native or stable (onlySOUL, when override is needed).
     function setNativePair(bool enabled) external onlySOUL {
         isNativePair = enabled;
-        assetAddress = enabled ? manifester.wnativeAddress() : manifester.usdcAddress();
+        assetAddress = enabled ? Manifester.wnativeAddress() : Manifester.usdcAddress();
+    }
+
+    // [.√.] updates: Manifester (onlySOUL)
+    function updateManifester(address _manifesterAddress) external onlySOUL {
+        Manifester = IManifester(_manifesterAddress);
     }
 
     ///////////////////////////////
@@ -581,7 +582,7 @@ contract Manifestation is IManifestation, ReentrancyGuard {
     ///////////////////////////////
 
     // [.√.] converts: uint to string (used when creating name)
-    function uint2str(uint _i) internal pure returns (string memory str) {
+    function stringifyUint(uint _i) public pure returns (string memory _string) {
         if (_i == 0) { return "0"; }
         uint j = _i;
         uint length;
@@ -596,9 +597,9 @@ contract Manifestation is IManifestation, ReentrancyGuard {
             bstr[--k] = bytes1(uint8(48 + j % 10));
             j /= 10;
         }
-        str = string(bstr);
+        _string = string(bstr);
     }
 
-    function toWei(uint amount) public pure returns (uint) { return amount * 1e18; }
-    function fromWei(uint amount) public pure returns (uint) { return amount / 1e18; }
+    function toWei(uint amount) public pure returns (uint) { return amount * 1E18; }
+    function fromWei(uint amount) public pure returns (uint) { return amount / 1E18; }
 }
