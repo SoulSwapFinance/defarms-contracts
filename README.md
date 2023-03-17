@@ -1,8 +1,6 @@
-# <h1 align="center"> Forge Template </h1>
+# <h1 align="center"> DeFarms Contracts </h1>
 
 **Template repository for getting started quickly with Foundry projects**
-
-![Github Actions](https://github.com/foundry-rs/forge-template/workflows/CI/badge.svg)
 
 ## Getting Started
 
@@ -37,3 +35,6 @@ contract ContractTest is Test {
 ## Development
 
 This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.getfoundry.sh/getting-started/installation.html) for instructions on how to install and use Foundry.
+
+# Deployed Contracts
+- [Manifester.sol](https://ftmscan.com/address/0xed65Fec909D5cFDB2A23a26554A7133F8d0d885a#code): 0xed65Fec909D5cFDB2A23a26554A7133F8d0d885a

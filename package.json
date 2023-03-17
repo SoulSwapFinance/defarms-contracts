@@ -1,0 +1,23 @@
+{
+  "name": "defarms-contracts",
+  "version": "1.0.0",
+  "description": "smart contracts for decentralized farms",
+  "main": "index.js",
+  "repository": "https://github.com/SoulSwapFinance/defarms-contracts.git",
+  "author": "Buns <bunsthedev@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "deploy": "forge script script/Manifester.s.sol:ManifesterScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
+    "deploy:mock": "forge script script/MockToken.s.sol:TokenScript --rpc-url https://rpc.ankr.com/fantom --broadcast --verify",
+    "test": "forge test -v",
+    "test:more": "forge test -vv",
+    "test:most": "forge test -vvvvv",
+    "flatten": "forge flatten"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.1",
+    "forge-std": "^1.1.2"
+  }
+}

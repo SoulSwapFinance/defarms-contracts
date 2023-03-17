@@ -1,2 +1,8 @@
-cache/
-out/
+/cache/
+/out/
+/node_modules/
+
+.env
+yarn-error.log
+/broadcast/
+/bin/
