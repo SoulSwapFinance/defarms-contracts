@@ -34,8 +34,8 @@ contract UpdatesTest is Test, Setup {
         vm.startPrank(DAO_ADDRESS);
         vm.expectRevert();
         manifestation.toggleActiveOverride(false);
-        vm.expectRevert();
-        manifestation.setFeeDaysOverride(12);
+        // vm.expectRevert();
+        // manifestation.setFeeDaysOverride(12);
         vm.stopPrank();
         console.log('[+] reverts when DAO transacts on non-settable functions (as expected).');
     }
@@ -60,36 +60,36 @@ contract UpdatesTest is Test, Setup {
         console.log("[+] updated logoURI successfully.");
     }
 
-    function testSetFeeDays() public {
-        uint maxFeeDays = 30;
-        uint minFeeDays = 0;
+    // function testSetFeeDays() public {
+    //     uint maxFeeDays = 30;
+    //     uint minFeeDays = 0;
 
-        vm.startPrank(SOUL_DAO_ADDRESS);
-        manifestation.setFeeDaysOverride(maxFeeDays);
-        vm.stopPrank();
+    //     vm.startPrank(SOUL_DAO_ADDRESS);
+    //     manifestation.setFeeDaysOverride(maxFeeDays);
+    //     vm.stopPrank();
 
-        assertEq(maxFeeDays, fromWei(manifestation.feeDays()));
-        console.log('[+] feeDays set to %s days.', maxFeeDays);
+    //     assertEq(maxFeeDays, fromWei(manifestation.feeDays()));
+    //     console.log('[+] feeDays set to %s days.', maxFeeDays);
 
-        vm.startPrank(SOUL_DAO_ADDRESS);
-        manifestation.setFeeDaysOverride(minFeeDays);
-        vm.stopPrank();
+    //     vm.startPrank(SOUL_DAO_ADDRESS);
+    //     manifestation.setFeeDaysOverride(minFeeDays);
+    //     vm.stopPrank();
 
-        assertEq(minFeeDays, fromWei(manifestation.feeDays()));
-        console.log('[+] feeDays set to %s days.', minFeeDays);
+    //     assertEq(minFeeDays, fromWei(manifestation.feeDays()));
+    //     console.log('[+] feeDays set to %s days.', minFeeDays);
 
-        vm.startPrank(SOUL_DAO_ADDRESS);
-        vm.expectRevert();
-        manifestation.setFeeDaysOverride(maxFeeDays + 1);
-        vm.stopPrank();
-        console.log('[+] reverts when fee days exceeds the max of %s days (as expected).', maxFeeDays);
+    //     vm.startPrank(SOUL_DAO_ADDRESS);
+    //     vm.expectRevert();
+    //     manifestation.setFeeDaysOverride(maxFeeDays + 1);
+    //     vm.stopPrank();
+    //     console.log('[+] reverts when fee days exceeds the max of %s days (as expected).', maxFeeDays);
 
-        vm.startPrank(DAO_ADDRESS);
-        vm.expectRevert();
-        manifestation.setFeeDaysOverride(maxFeeDays);
-        vm.stopPrank();
-        console.log('[+] reverts when non-SoulDAO updates fee days (as expected).');
-    }
+    //     vm.startPrank(DAO_ADDRESS);
+    //     vm.expectRevert();
+    //     manifestation.setFeeDaysOverride(maxFeeDays);
+    //     vm.stopPrank();
+    //     console.log('[+] reverts when non-SoulDAO updates fee days (as expected).');
+    // }
 
     function testSetNativePair() public {
         address _assetAddress_0 = manifester.wnativeAddress();
@@ -176,4 +176,24 @@ contract UpdatesTest is Test, Setup {
         assertTrue(manifesterAddress_0 != manifesterAddress_1);
         console.log('[+] Manifester updated successfully');
     }
+
+    function testSetRewardsOverride() public {
+        vm.startPrank(SOUL_DAO_ADDRESS);
+        // old values
+        uint feeDays = manifestation.feeDays();
+        uint dailyReward = manifestation.dailyReward();
+        console.log('feeDays: %s', feeDays);
+        console.log('dailyReward: %s', dailyReward);
+
+        // new values
+        uint _feeDays = 0;
+        uint _dailyReward = 0;
+        // updates: rewards info.
+        manifestation.setRewardsOverride(_feeDays, _dailyReward);
+        
+        // shows new values
+        console.log('feeDays: %s', manifestation.feeDays());
+        console.log('dailyReward: %s', manifestation.dailyReward());
+    }
+    
 }

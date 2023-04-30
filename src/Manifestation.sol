@@ -525,18 +525,18 @@ contract Manifestation is IManifestation, ReentrancyGuard {
         isSettable = enabled;
     }
 
-    // [.√.] overrides: feeDays (onlySOUL)
-    function setFeeDaysOverride(uint _feeDays) external onlySOUL {
-        // gets: current fee days & ensures distinction (pool)
-        require(feeDays != toWei(_feeDays), 'no change.');
-        
+    // [.√.] overrides: reward rate (onlySOUL).
+    function setRewardsOverride(uint _feeDays, uint _dailyReward) external onlySOUL {
         // limits: feeDays by default maximum of 30 days.
         require(toWei(_feeDays) <= toWei(30), 'exceeds 30 days.');
-        
-        // updates: fee days (pool)
+
+        // sets: key rewards info.
         feeDays = toWei(_feeDays);
-        
+        dailyReward = toWei(_dailyReward);
+        rewardPerSecond = toWei(_dailyReward) / 1 days;
+
         emit FeeDaysUpdated(toWei(_feeDays), block.timestamp);
+        emit RewardsSet(duraDays,  _feeDays, _dailyReward, block.timestamp);
     }
 
     // [.√.] overrides: active state (onlySOUL).
