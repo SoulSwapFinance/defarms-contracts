@@ -264,8 +264,8 @@ contract Manifester is IManifester {
         // transfers: share directly to soulDAO.
         IERC20(rewardAddress).safeTransferFrom(msg.sender, soulDAO, toDAO);
         
-        // transfers: `totalRewards` to the manifestation contract.
-        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, total);
+        // transfers: `reward` to the manifestation contract.
+        IERC20(rewardAddress).safeTransferFrom(msg.sender, mAddress, reward);
 
         return true;
     }
