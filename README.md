@@ -38,4 +38,4 @@ This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.
 
 # Deployed Contracts
 - [Manifester.sol](https://ftmscan.com/address/0xA791C1aC56b23729C1b02114076491E6eCAc7b22#code): 0xA791C1aC56b23729C1b02114076491E6eCAc7b22
-- [Manifestation.sol](https://ftmscan.com/address/0x088100f1a4291F88c59652984F1fCc58ba0Fc9c5#code): 0x088100f1a4291F88c59652984F1fCc58ba0Fc9c5
+- [Manifestation.sol](https://ftmscan.com/address/0x7B1A445A7a36F569C8C606A16a725e531b00394F#code): 0x7B1A445A7a36F569C8C606A16a725e531b00394F
