@@ -6,14 +6,12 @@ import "../src/Manifester.sol";
 
 contract ManifesterScript is Script {
 
-    address public _factoryAddress = 0x1120e150dA9def6Fe930f4fEDeD18ef57c0CA7eF;
-    address public _auraAddress = 0xec3F962238cC6D45aEc0f97D0f150e221Ef3C42C;
-    address public _usdcAddress = 0x04068DA6C83AFCFA0e13ba15A6696662335D5B75;
-    address public _wnativeAddress = 0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83;
-    // address public _nativeOracle = 0xf4766552D15AE4d256Ad41B6cf2933482B0680dc;
+    address public _factoryAddress = 0x5BB2a9984de4a69c05c996F7EF09597Ac8c9D63a;    // avax
+    address public _auraAddress = 0x268D3D63088821C17c59860D6B9476680a4843d2;       // avax
+    address public _usdcAddress = 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E;       // avax
+    address public _wnativeAddress = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;    // avax
     address public _enchantressAddress = 0xFd63Bf84471Bc55DD9A83fdFA293CCBD27e1F4C8;
 
-    
     // uint public _oracleDecimals = 8;
     string public _nativeSymbol = 'NATIVE';
 

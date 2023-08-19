@@ -36,6 +36,8 @@ contract ContractTest is Test {
 
 This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.getfoundry.sh/getting-started/installation.html) for instructions on how to install and use Foundry.
 
+# Manual Verification
+forge verify-contract <CONTRACT_ADDRESS> src/Manifester.sol:Manifester <API_KEY>
+
 # Deployed Contracts
-- [Manifester.sol](https://ftmscan.com/address/0xA791C1aC56b23729C1b02114076491E6eCAc7b22#code): 0xA791C1aC56b23729C1b02114076491E6eCAc7b22
-- [Manifestation.sol](https://ftmscan.com/address/0x7B1A445A7a36F569C8C606A16a725e531b00394F#code): 0x7B1A445A7a36F569C8C606A16a725e531b00394F
+- [Manifester.sol](https://snowtrace.com/address/0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66#code): 0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66
