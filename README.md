@@ -40,4 +40,4 @@ This project uses [Foundry](https://getfoundry.sh). See the [book](https://book.
 forge verify-contract <CONTRACT_ADDRESS> src/Manifester.sol:Manifester <API_KEY>
 
 # Deployed Contracts
-- [Manifester.sol](https://snowtrace.com/address/0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66#code): 0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66
+- [Manifester.sol](https://snowtrace.io/address/0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66#code): 0x8BC948C47205bC2293b1E191CdF47E2Dfe9bAf66
