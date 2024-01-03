@@ -66,6 +66,7 @@ contract Setup is Test {
         // initializes: Mock Factory
         factory = new MockFactory();
         FACTORY_ADDRESS = address(factory);
+        console.log('factory initialized');
 
 
         // initializes: Native Token
@@ -75,6 +76,7 @@ contract Setup is Test {
             INITIAL_SUPPLY                     // totalSupply
         );
         WNATIVE_ADDRESS = address(WNATIVE);
+        console.log('wnative initialized');
 
         // initializes: USDC Token
         USDC = new MockToken(
@@ -83,6 +85,7 @@ contract Setup is Test {
             INITIAL_SUPPLY                     // totalSupply
         );
         USDC_ADDRESS = address(USDC);
+        console.log('usdc initialized');
 
         // initializes: AURA Token
         AURA = new MockToken(
@@ -91,6 +94,7 @@ contract Setup is Test {
             INITIAL_SUPPLY                     // totalSupply
         );
         AURA_ADDRESS = address(AURA);
+        console.log('aura initialized');
 
         // initializes: Reward Token
         REWARD = new MockToken(
@@ -99,6 +103,7 @@ contract Setup is Test {
             INITIAL_SUPPLY                     // totalSupply
         );
         REWARD_ADDRESS = address(REWARD);
+        console.log('reward tokenxw initialized');
 
         // initializes: Reward Token
         DEPOSIT = new MockToken(
@@ -107,6 +112,7 @@ contract Setup is Test {
             INITIAL_SUPPLY                     // totalSupply
         );
         DEPOSIT_ADDRESS = address(DEPOSIT);
+        console.log('deposit token initialized');
 
         // deploys: Manifester Contract
         manifester = new Manifester(
@@ -120,6 +126,7 @@ contract Setup is Test {
             WNATIVE.symbol()
         );
         MANIFESTER_ADDRESS = address(manifester);
+        console.log('manifester deployed');
 
         // uint totalRewards = manifester.getTotalRewards(DURA_DAYS, DAILY_REWARD);
         // uint sacrifice = manifester.getSacrifice(fromWei(totalRewards));
@@ -134,6 +141,7 @@ contract Setup is Test {
 
         // approves: manifestation to transferFrom REWARD token.
         REWARD.approve(MANIFESTER_ADDRESS, toWei(INITIAL_SUPPLY));
+        console.log('approved reward deployed');
         // console.log('manifesting...');
 
         // creates: Manifestation[0]
@@ -147,8 +155,7 @@ contract Setup is Test {
             DAILY_REWARD,
             'https://raw.githubusercontent.com/SoulSwapFinance/assets/prod/blockchains/fantom/assets/0xc7183455a4C133Ae270771860664b6B7ec320bB1.logo.png'
         );
-
-        // console.log('manifestation created.');
+        console.log('manifestation created.');
 
         MANIFESTATION_0_ADDRESS = manifester.manifestations(0);
         // console.log('manifestation[0] address: %s', MANIFESTATION_0_ADDRESS);
@@ -176,6 +183,7 @@ contract Setup is Test {
         vm.startPrank(SOUL_DAO_ADDRESS);
         vm.expectRevert();
         manifester.setDelay(0, 0);
+        console.log('delay set');
         vm.stopPrank();
         // console.log('[+] delay reverts when non-DAO sets delay.');
 
@@ -186,15 +194,16 @@ contract Setup is Test {
         // console.log('toggling active...');
         // console.log('dao [m0] %s', manifestation.DAO());
         manifestation.toggleActiveOverride(true);
-        // console.log('[+] active set successfully.');
+        console.log('[+] active set successfully.');
 
         // approves: deposit token to Manifestation[0].
         // console.log('approving deposit...');
         DEPOSIT.approve(MANIFESTATION_0_ADDRESS, toWei(INITIAL_SUPPLY));
-        // console.log('deposit approved');
+        console.log('deposit approved.');
 
         // for demonstration purposes (on `totalDeposits`).
         DEPOSIT.transfer(MANIFESTATION_0_ADDRESS, toWei(100));
+        console.log('deposit token transferred.');
 
         // sets: feeRate to 14%.
         // console.log('setting fee days...');
@@ -203,9 +212,12 @@ contract Setup is Test {
 
         // sets: addresses for test clarity.
         manifester.setSoulDAO(SOUL_DAO_ADDRESS);
+        console.log('soulDAO set');
         manifestation.setDAO(DAO_ADDRESS);
+        console.log('DAO set');
         vm.prank(DAO_ADDRESS);
         manifestation.acceptDAO();
+        console.log('DAO accepted');
         vm.stopPrank();
 
 
